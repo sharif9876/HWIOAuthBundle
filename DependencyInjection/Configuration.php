@@ -153,6 +153,7 @@ class Configuration implements ConfigurationInterface
                 ->booleanNode('use_referer')->defaultFalse()->end()
                 ->scalarNode('templating_engine')->defaultValue('twig')->end()
                 ->scalarNode('failed_auth_path')->defaultValue('hwi_oauth_connect')->end()
+                ->scalarNode('storage_service')->defaultValue('hwi_oauth.storage.session')->end()
             ->end()
         ;
 
