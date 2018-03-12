@@ -49,6 +49,7 @@ class Configuration implements ConfigurationInterface
             'fiware',
             'foursquare',
             'github',
+            'gitlab',
             'google',
             'youtube',
             'hubic',
@@ -74,7 +75,6 @@ class Configuration implements ConfigurationInterface
             'trakt',
             'twitch',
             'vkontakte',
-            'wechat',
             'windows_live',
             'wordpress',
             'wunderlist',
@@ -105,11 +105,12 @@ class Configuration implements ConfigurationInterface
      */
     public static function getResourceOwnerType($resourceOwner)
     {
+        $resourceOwner = strtolower($resourceOwner);
         if ('oauth1' === $resourceOwner || 'oauth2' === $resourceOwner) {
             return $resourceOwner;
         }
 
-        if (in_array($resourceOwner, static::$resourceOwners['oauth1'])) {
+        if (in_array($resourceOwner, static::$resourceOwners['oauth1'], true)) {
             return 'oauth1';
         }
 
@@ -125,11 +126,16 @@ class Configuration implements ConfigurationInterface
      */
     public static function isResourceOwnerSupported($resourceOwner)
     {
+        $resourceOwner = strtolower($resourceOwner);
         if ('oauth1' === $resourceOwner || 'oauth2' === $resourceOwner) {
             return true;
         }
 
-        return in_array($resourceOwner, static::$resourceOwners['oauth1']) || in_array($resourceOwner, static::$resourceOwners['oauth2']);
+        if (in_array($resourceOwner, static::$resourceOwners['oauth1'], true)) {
+            return true;
+        }
+
+        return in_array($resourceOwner, static::$resourceOwners['oauth2'], true);
     }
 
     /**
@@ -143,17 +149,27 @@ class Configuration implements ConfigurationInterface
 
         $rootNode = $builder->root('hwi_oauth');
         $rootNode
+            ->fixXmlConfig('firewall_name')
             ->children()
                 ->arrayNode('firewall_names')
                     ->isRequired()
-                    ->cannotBeEmpty()
+                    ->requiresAtLeastOneElement()
                     ->prototype('scalar')->end()
                 ->end()
                 ->scalarNode('target_path_parameter')->defaultNull()->end()
                 ->booleanNode('use_referer')->defaultFalse()->end()
-                ->scalarNode('templating_engine')->defaultValue('twig')->end()
+                ->booleanNode('failed_use_referer')->defaultFalse()->end()
                 ->scalarNode('failed_auth_path')->defaultValue('hwi_oauth_connect')->end()
                 ->scalarNode('storage_service')->defaultValue('hwi_oauth.storage.session')->end()
+                ->scalarNode('grant_rule')
+                    ->defaultValue('IS_AUTHENTICATED_REMEMBERED')
+                    ->validate()
+                        ->ifTrue(function ($role) {
+                            return !('IS_AUTHENTICATED_REMEMBERED' === $role || 'IS_AUTHENTICATED_FULLY' === $role);
+                        })
+                        ->thenInvalid('Unknown grant role set "%s".')
+                    ->end()
+                ->end()
             ->end()
         ;
 
@@ -251,6 +267,14 @@ class Configuration implements ConfigurationInterface
                                     ->thenUnset()
                                 ->end()
                             ->end()
+                            ->scalarNode('class')
+                                ->validate()
+                                    ->ifTrue(function ($v) {
+                                        return empty($v);
+                                    })
+                                    ->thenUnset()
+                                ->end()
+                            ->end()
                             ->scalarNode('type')
                                 ->validate()
                                     ->ifTrue(function ($type) {
@@ -313,8 +337,8 @@ class Configuration implements ConfigurationInterface
                         ->end()
                         ->validate()
                             ->ifTrue(function ($c) {
-                                // skip if this contains a service
-                                if (isset($c['service'])) {
+                                // Skip if this contains a service or a class
+                                if (isset($c['service']) || isset($c['class'])) {
                                     return false;
                                 }
 
@@ -342,7 +366,7 @@ class Configuration implements ConfigurationInterface
                         ->validate()
                             ->ifTrue(function ($c) {
                                 // skip if this contains a service
-                                if (isset($c['service'])) {
+                                if (isset($c['service']) || isset($c['class'])) {
                                     return false;
                                 }
 
@@ -377,6 +401,16 @@ class Configuration implements ConfigurationInterface
                             })
                             ->thenInvalid("If you're setting a 'service', no other arguments should be set.")
                         ->end()
+                        ->validate()
+                            ->ifTrue(function ($c) {
+                                if (!isset($c['class'])) {
+                                    return false;
+                                }
+
+                                return 'oauth2' !== $c['type'] && 'oauth1' !== $c['type'];
+                            })
+                            ->thenInvalid("If you're setting a 'class', you must provide a 'oauth1' or 'oauth2' type")
+                        ->end()
                     ->end()
                 ->end()
             ->end()
@@ -387,14 +421,11 @@ class Configuration implements ConfigurationInterface
     {
         $node
             ->children()
-                ->arrayNode('http_client')
+                ->arrayNode('http')
                     ->addDefaultsIfNotSet()
                     ->children()
-                        ->scalarNode('timeout')->defaultValue(5)->cannotBeEmpty()->end()
-                        ->booleanNode('verify_peer')->defaultTrue()->end()
-                        ->scalarNode('max_redirects')->defaultValue(5)->cannotBeEmpty()->end()
-                        ->booleanNode('ignore_errors')->defaultTrue()->end()
-                        ->scalarNode('proxy')->end()
+                        ->scalarNode('client')->defaultValue('httplug.client.default')->end()
+                        ->scalarNode('message_factory')->defaultValue('httplug.message_factory.default')->end()
                     ->end()
                 ->end()
             ->end()

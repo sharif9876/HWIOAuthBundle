@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of the HWIOAuthBundle package.
+ *
+ * (c) Hardware.Info <opensource@hardware.info>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace HWI\Bundle\OAuthBundle\Tests\Controller;
 
 use HWI\Bundle\OAuthBundle\Tests\Fixtures\CustomOAuthToken;
@@ -12,9 +21,9 @@ class ConnectControllerConnectActionTest extends AbstractConnectControllerTest
     {
         $this->container->setParameter('hwi_oauth.connect', true);
 
-        $this->templating->expects($this->once())
-            ->method('renderResponse')
-            ->with('HWIOAuthBundle:Connect:login.html.twig')
+        $this->twig->expects($this->once())
+            ->method('render')
+            ->with('@HWIOAuth/Connect/login.html.twig')
         ;
 
         $this->controller->connectAction($this->request);
@@ -26,16 +35,12 @@ class ConnectControllerConnectActionTest extends AbstractConnectControllerTest
             $this->getAuthenticationErrorKey() => $this->createAccountNotLinkedException(),
         ));
 
-        $this->getTokenStorage()->expects($this->once())
+        $this->tokenStorage->expects($this->once())
             ->method('getToken')
             ->willReturn(new CustomOAuthToken())
         ;
 
-        $this->getAuthorizationChecker()->expects($this->once())
-            ->method('isGranted')
-            ->with('IS_AUTHENTICATED_REMEMBERED')
-            ->willReturn(false)
-        ;
+        $this->mockAuthorizationCheck(false);
 
         $this->router->expects($this->once())
             ->method('generate')
@@ -52,12 +57,12 @@ class ConnectControllerConnectActionTest extends AbstractConnectControllerTest
             $this->getAuthenticationErrorKey() => $this->createAccountNotLinkedException(),
         ));
 
-        $this->getTokenStorage()->expects($this->once())
+        $this->tokenStorage->expects($this->once())
             ->method('getToken')
             ->willReturn(null)
         ;
 
-        $this->getAuthorizationChecker()->expects($this->never())
+        $this->authorizationChecker->expects($this->never())
             ->method('isGranted')
         ;
 
@@ -76,9 +81,9 @@ class ConnectControllerConnectActionTest extends AbstractConnectControllerTest
             $this->getAuthenticationErrorKey() => new AccessDeniedException('You shall not pass the request.'),
         ));
 
-        $this->templating->expects($this->once())
-            ->method('renderResponse')
-            ->with('HWIOAuthBundle:Connect:login.html.twig', array('error' => 'You shall not pass the request.'))
+        $this->twig->expects($this->once())
+            ->method('render')
+            ->with('@HWIOAuth/Connect/login.html.twig', array('error' => 'You shall not pass the request.'))
         ;
 
         $this->controller->connectAction($this->request);
@@ -98,9 +103,9 @@ class ConnectControllerConnectActionTest extends AbstractConnectControllerTest
             ->willReturn(new AccessDeniedException('You shall not pass the session.'))
         ;
 
-        $this->templating->expects($this->once())
-            ->method('renderResponse')
-            ->with('HWIOAuthBundle:Connect:login.html.twig', array('error' => 'You shall not pass the session.'))
+        $this->twig->expects($this->once())
+            ->method('render')
+            ->with('@HWIOAuth/Connect/login.html.twig', array('error' => 'You shall not pass the session.'))
         ;
 
         $this->controller->connectAction($this->request);

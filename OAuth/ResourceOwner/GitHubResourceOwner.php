@@ -11,7 +11,6 @@
 
 namespace HWI\Bundle\OAuthBundle\OAuth\ResourceOwner;
 
-use Buzz\Message\RequestInterface as HttpRequestInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
@@ -36,13 +35,41 @@ class GitHubResourceOwner extends GenericOAuth2ResourceOwner
     /**
      * {@inheritdoc}
      */
+    public function getUserInformation(array $accessToken, array $extraParameters = array())
+    {
+        $response = parent::getUserInformation($accessToken, $extraParameters);
+
+        $responseData = $response->getData();
+        if (empty($responseData['email'])) {
+            // fetch the email addresses linked to the account
+            $content = $this->httpRequest(
+                $this->normalizeUrl($this->options['emails_url']), null, array('Authorization' => 'Bearer '.$accessToken['access_token'])
+            );
+
+            foreach ($this->getResponseContent($content) as $email) {
+                if (!empty($email['primary'])) {
+                    // we only need the primary email address
+                    $responseData['email'] = $email['email'];
+                    break;
+                }
+            }
+
+            $response->setData($responseData);
+        }
+
+        return $response;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function revokeToken($token)
     {
         $response = $this->httpRequest(
             sprintf($this->options['revoke_token_url'], $this->options['client_id'], $token),
             null,
-            array('Authorization: Basic '.base64_encode($this->options['client_id'].':'.$this->options['client_secret'])),
-            HttpRequestInterface::METHOD_DELETE
+            array('Authorization' => 'Basic '.base64_encode($this->options['client_id'].':'.$this->options['client_secret'])),
+            'DELETE'
         );
 
         return 204 === $response->getStatusCode();
@@ -64,32 +91,5 @@ class GitHubResourceOwner extends GenericOAuth2ResourceOwner
 
             'use_commas_in_scope' => true,
         ));
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getUserInformation(array $accessToken, array $extraParameters = array())
-    {
-        $response = parent::getUserInformation($accessToken, $extraParameters);
-
-        $responseData = $response->getResponse();
-
-        if (empty($responseData['email'])) {
-            // fetch the email addresses linked to the account
-            $content = $this->httpRequest($this->normalizeUrl($this->options['emails_url']), null, array('Authorization: Bearer '.$accessToken['access_token']));
-
-            foreach ($this->getResponseContent($content) as $email) {
-                if (!empty($email['primary'])) {
-                    // we only need the primary email address
-                    $responseData['email'] = $email['email'];
-                    break;
-                }
-            }
-
-            $response->setResponse($responseData);
-        }
-
-        return $response;
     }
 }

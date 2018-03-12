@@ -14,8 +14,6 @@ namespace HWI\Bundle\OAuthBundle\OAuth\ResourceOwner;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
- * RedditResourceOwner.
- *
  * @author Martin Aarhof <martin.aarhof@gmail.com>
  */
 class RedditResourceOwner extends GenericOAuth2ResourceOwner
@@ -35,7 +33,14 @@ class RedditResourceOwner extends GenericOAuth2ResourceOwner
      */
     protected function doGetTokenRequest($url, array $parameters = array())
     {
-        return $this->httpRequest($url, null, array('Authorization: Basic '.base64_encode(sprintf('%s:%s', $this->options['client_id'], $this->options['client_secret']))));
+        return $this->httpRequest(
+            $url,
+            http_build_query($parameters, '', '&'),
+            [
+                'Authorization' => 'Basic '.base64_encode(sprintf('%s:%s', $this->options['client_id'], $this->options['client_secret'])),
+            ],
+            'POST'
+        );
     }
 
     /**
@@ -45,7 +50,7 @@ class RedditResourceOwner extends GenericOAuth2ResourceOwner
     {
         parent::configureOptions($resolver);
 
-        $resolver->setDefaults(array(
+        $resolver->setDefaults([
             'authorization_url' => 'https://ssl.reddit.com/api/v1/authorize',
             'access_token_url' => 'https://ssl.reddit.com/api/v1/access_token',
             'infos_url' => 'https://oauth.reddit.com/api/v1/me.json',
@@ -56,6 +61,6 @@ class RedditResourceOwner extends GenericOAuth2ResourceOwner
             'scope' => 'identity',
 
             'duration' => 'permanent',
-        ));
+        ]);
     }
 }

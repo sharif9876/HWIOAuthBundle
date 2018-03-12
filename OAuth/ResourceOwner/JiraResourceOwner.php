@@ -11,9 +11,9 @@
 
 namespace HWI\Bundle\OAuthBundle\OAuth\ResourceOwner;
 
-use Buzz\Message\RequestInterface as HttpRequestInterface;
 use HWI\Bundle\OAuthBundle\Security\Core\Authentication\Token\OAuthToken;
 use HWI\Bundle\OAuthBundle\Security\OAuthUtils;
+use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -50,7 +50,7 @@ class JiraResourceOwner extends GenericOAuth1ResourceOwner
         ), $extraParameters);
 
         $parameters['oauth_signature'] = OAuthUtils::signRequest(
-            HttpRequestInterface::METHOD_GET,
+            'GET',
             $this->options['infos_session_url'],
             $parameters,
             $this->options['client_secret'],
@@ -64,7 +64,7 @@ class JiraResourceOwner extends GenericOAuth1ResourceOwner
         // Regenerate nonce & signature as URL was changed
         $parameters['oauth_nonce'] = $this->generateNonce();
         $parameters['oauth_signature'] = OAuthUtils::signRequest(
-            HttpRequestInterface::METHOD_GET,
+            'GET',
             $url,
             $parameters,
             $this->options['client_secret'],
@@ -72,10 +72,10 @@ class JiraResourceOwner extends GenericOAuth1ResourceOwner
             $this->options['signature_method']
         );
 
-        $content = $this->doGetUserInformationRequest($url, $parameters)->getContent();
+        $content = $this->doGetUserInformationRequest($url, $parameters);
 
         $response = $this->getUserResponse();
-        $response->setResponse($content);
+        $response->setData($content instanceof ResponseInterface ? (string) $content->getBody() : $content);
         $response->setResourceOwner($this);
         $response->setOAuthToken(new OAuthToken($accessToken));
 
@@ -109,23 +109,12 @@ class JiraResourceOwner extends GenericOAuth1ResourceOwner
             return str_replace('{base_url}', $options['base_url'], $value);
         };
 
-        // Symfony <2.6 BC
-        if (method_exists($resolver, 'setNormalizer')) {
-            $resolver
-                ->setNormalizer('authorization_url', $normalizer)
-                ->setNormalizer('request_token_url', $normalizer)
-                ->setNormalizer('access_token_url', $normalizer)
-                ->setNormalizer('infos_session_url', $normalizer)
-                ->setNormalizer('infos_url', $normalizer)
-            ;
-        } else {
-            $resolver->setNormalizers(array(
-                'authorization_url' => $normalizer,
-                'request_token_url' => $normalizer,
-                'access_token_url' => $normalizer,
-                'infos_session_url' => $normalizer,
-                'infos_url' => $normalizer,
-            ));
-        }
+        $resolver
+            ->setNormalizer('authorization_url', $normalizer)
+            ->setNormalizer('request_token_url', $normalizer)
+            ->setNormalizer('access_token_url', $normalizer)
+            ->setNormalizer('infos_session_url', $normalizer)
+            ->setNormalizer('infos_url', $normalizer)
+        ;
     }
 }

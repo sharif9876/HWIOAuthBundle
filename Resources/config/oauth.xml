@@ -39,6 +39,7 @@
         <parameter key="hwi_oauth.resource_owner.flickr.class">HWI\Bundle\OAuthBundle\OAuth\ResourceOwner\FlickrResourceOwner</parameter>
         <parameter key="hwi_oauth.resource_owner.foursquare.class">HWI\Bundle\OAuthBundle\OAuth\ResourceOwner\FoursquareResourceOwner</parameter>
         <parameter key="hwi_oauth.resource_owner.github.class">HWI\Bundle\OAuthBundle\OAuth\ResourceOwner\GitHubResourceOwner</parameter>
+        <parameter key="hwi_oauth.resource_owner.gitlab.class">HWI\Bundle\OAuthBundle\OAuth\ResourceOwner\GitLabResourceOwner</parameter>
         <parameter key="hwi_oauth.resource_owner.google.class">HWI\Bundle\OAuthBundle\OAuth\ResourceOwner\GoogleResourceOwner</parameter>
         <parameter key="hwi_oauth.resource_owner.youtube.class">HWI\Bundle\OAuthBundle\OAuth\ResourceOwner\YoutubeResourceOwner</parameter>
         <parameter key="hwi_oauth.resource_owner.hubic.class">HWI\Bundle\OAuthBundle\OAuth\ResourceOwner\HubicResourceOwner</parameter>
@@ -67,7 +68,6 @@
         <parameter key="hwi_oauth.resource_owner.twitch.class">HWI\Bundle\OAuthBundle\OAuth\ResourceOwner\TwitchResourceOwner</parameter>
         <parameter key="hwi_oauth.resource_owner.twitter.class">HWI\Bundle\OAuthBundle\OAuth\ResourceOwner\TwitterResourceOwner</parameter>
         <parameter key="hwi_oauth.resource_owner.vkontakte.class">HWI\Bundle\OAuthBundle\OAuth\ResourceOwner\VkontakteResourceOwner</parameter>
-        <parameter key="hwi_oauth.resource_owner.wechat.class">HWI\Bundle\OAuthBundle\OAuth\ResourceOwner\WechatResourceOwner</parameter>
         <parameter key="hwi_oauth.resource_owner.windows_live.class">HWI\Bundle\OAuthBundle\OAuth\ResourceOwner\WindowsLiveResourceOwner</parameter>
         <parameter key="hwi_oauth.resource_owner.wordpress.class">HWI\Bundle\OAuthBundle\OAuth\ResourceOwner\WordpressResourceOwner</parameter>
         <parameter key="hwi_oauth.resource_owner.wunderlist.class">HWI\Bundle\OAuthBundle\OAuth\ResourceOwner\WunderlistResourceOwner</parameter>
@@ -123,10 +123,11 @@
             <argument type="service" id="session" />
         </service>
 
-        <service id="hwi_oauth.security.oauth_utils" class="%hwi_oauth.security.oauth_utils.class%">
+        <service id="hwi_oauth.security.oauth_utils" class="%hwi_oauth.security.oauth_utils.class%" public="true">
             <argument type="service" id="security.http_utils" />
-            <argument /> <!-- security.authorization_checker or security.context for Symfony <2.6 -->
+            <argument type="service" id="security.authorization_checker" />
             <argument>%hwi_oauth.connect%</argument>
+            <argument>%hwi_oauth.grant_rule%</argument>
         </service>
 
         <!-- Resource owners -->

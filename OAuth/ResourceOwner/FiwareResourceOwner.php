@@ -15,7 +15,6 @@ use HWI\Bundle\OAuthBundle\Security\Core\Authentication\Token\OAuthToken;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-use Buzz\Message\RequestInterface as HttpRequestInterface;
 
 /**
  * FiwareResourceOwner.
@@ -50,11 +49,10 @@ class FiwareResourceOwner extends GenericOAuth2ResourceOwner
         ), $extraParameters);
 
         $headers = array(
-            'Authorization: Basic '.base64_encode($this->options['client_id'].':'.$this->options['client_secret']),
-            'Content-Type: application/x-www-form-urlencoded',
+            'Authorization' => 'Basic '.base64_encode($this->options['client_id'].':'.$this->options['client_secret']),
         );
 
-        $response = $this->httpRequest($this->options['access_token_url'], http_build_query($parameters, '', '&'), $headers, HttpRequestInterface::METHOD_POST);
+        $response = $this->httpRequest($this->options['access_token_url'], http_build_query($parameters, '', '&'), $headers, 'POST');
         $responseContent = $this->getResponseContent($response);
 
         $this->validateResponseContent($responseContent);
@@ -68,14 +66,25 @@ class FiwareResourceOwner extends GenericOAuth2ResourceOwner
     public function getUserInformation(array $accessToken, array $extraParameters = array())
     {
         if ($this->options['use_bearer_authorization']) {
-            $content = $this->httpRequest($this->normalizeUrl($this->options['infos_url'], array('access_token' => $accessToken['access_token'])), null, array('Authorization: Bearer'));
+            $content = $this->httpRequest(
+                $this->normalizeUrl(
+                    $this->options['infos_url'],
+                    array('access_token' => $accessToken['access_token'])
+                ),
+                null,
+                array('Authorization' => 'Bearer')
+            );
         } else {
-            $content = $this->doGetUserInformationRequest($this->normalizeUrl($this->options['infos_url'], array($this->options['attr_name'] => $accessToken['access_token'])));
+            $content = $this->doGetUserInformationRequest(
+                $this->normalizeUrl(
+                    $this->options['infos_url'],
+                    array($this->options['attr_name'] => $accessToken['access_token'])
+                )
+            );
         }
 
         $response = $this->getUserResponse();
-        $response->setResponse($content->getContent());
-
+        $response->setData((string) $content->getBody());
         $response->setResourceOwner($this);
         $response->setOAuthToken(new OAuthToken($accessToken));
 
@@ -104,19 +113,11 @@ class FiwareResourceOwner extends GenericOAuth2ResourceOwner
             return str_replace('{base_url}', $options['base_url'], $value);
         };
 
-        // Symfony <2.6 BC
-        if (method_exists($resolver, 'setNormalizer')) {
-            $resolver->setNormalizer('authorization_url', $normalizer);
-            $resolver->setNormalizer('access_token_url', $normalizer);
-            $resolver->setNormalizer('revoke_token_url', $normalizer);
-            $resolver->setNormalizer('infos_url', $normalizer);
-        } else {
-            $resolver->setNormalizers(array(
-                'authorization_url' => $normalizer,
-                'access_token_url' => $normalizer,
-                'revoke_token_url' => $normalizer,
-                'infos_url' => $normalizer,
-            ));
-        }
+        $resolver
+            ->setNormalizer('authorization_url', $normalizer)
+            ->setNormalizer('access_token_url', $normalizer)
+            ->setNormalizer('revoke_token_url', $normalizer)
+            ->setNormalizer('infos_url', $normalizer)
+        ;
     }
 }

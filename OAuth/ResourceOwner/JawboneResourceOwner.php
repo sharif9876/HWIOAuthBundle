@@ -33,21 +33,6 @@ class JawboneResourceOwner extends GenericOAuth2ResourceOwner
     /**
      * {@inheritdoc}
      */
-    protected function configureOptions(OptionsResolver $resolver)
-    {
-        parent::configureOptions($resolver);
-
-        $resolver->setDefaults(array(
-            'authorization_url' => 'https://jawbone.com/auth/oauth2/auth',
-            'access_token_url' => 'https://jawbone.com/auth/oauth2/token',
-            'infos_url' => 'https://jawbone.com/nudge/api/v.1.0/users/@me',
-            'use_commas_in_scope' => true,
-        ));
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function revokeToken($accessToken)
     {
         $response = $this->getInformation($accessToken, 'PartnerAppMembership');
@@ -63,10 +48,25 @@ class JawboneResourceOwner extends GenericOAuth2ResourceOwner
         $url = $this->normalizeUrl($this->options['infos_url'].'/'.$type, $extraParameters);
 
         $headers = array(
-            'Authorization: Bearer '.$accessToken['access_token'],
-            'Accept: application/json',
+            'Authorization' => 'Bearer '.$accessToken['access_token'],
+            'Accept' => 'application/json',
         );
 
         return $this->httpRequest($url, null, $headers);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function configureOptions(OptionsResolver $resolver)
+    {
+        parent::configureOptions($resolver);
+
+        $resolver->setDefaults(array(
+            'authorization_url' => 'https://jawbone.com/auth/oauth2/auth',
+            'access_token_url' => 'https://jawbone.com/auth/oauth2/token',
+            'infos_url' => 'https://jawbone.com/nudge/api/v.1.0/users/@me',
+            'use_commas_in_scope' => true,
+        ));
     }
 }

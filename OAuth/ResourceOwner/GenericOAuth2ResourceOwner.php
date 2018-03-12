@@ -11,16 +11,15 @@
 
 namespace HWI\Bundle\OAuthBundle\OAuth\ResourceOwner;
 
-use Buzz\Message\RequestInterface as HttpRequestInterface;
 use HWI\Bundle\OAuthBundle\Security\Core\Authentication\Token\OAuthToken;
-use Symfony\Component\HttpFoundation\Request;
+use HWI\Bundle\OAuthBundle\Security\OAuthErrorHandler;
+use Psr\Http\Message\ResponseInterface;
+use Symfony\Component\HttpFoundation\Request as HttpRequest;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 
 /**
- * GenericOAuth2ResourceOwner.
- *
  * @author Geoffrey Bachelet <geoffrey.bachelet@gmail.com>
  * @author Alexander <iam.asm89@gmail.com>
  */
@@ -32,14 +31,22 @@ class GenericOAuth2ResourceOwner extends AbstractResourceOwner
     public function getUserInformation(array $accessToken, array $extraParameters = array())
     {
         if ($this->options['use_bearer_authorization']) {
-            $content = $this->httpRequest($this->normalizeUrl($this->options['infos_url'], $extraParameters), null, array('Authorization: Bearer '.$accessToken['access_token']));
+            $content = $this->httpRequest(
+                $this->normalizeUrl($this->options['infos_url'], $extraParameters),
+                null,
+                array('Authorization' => 'Bearer '.$accessToken['access_token'])
+            );
         } else {
-            $content = $this->doGetUserInformationRequest($this->normalizeUrl($this->options['infos_url'], array_merge(array($this->options['attr_name'] => $accessToken['access_token']), $extraParameters)));
+            $content = $this->doGetUserInformationRequest(
+                $this->normalizeUrl(
+                    $this->options['infos_url'],
+                    array_merge(array($this->options['attr_name'] => $accessToken['access_token']), $extraParameters)
+                )
+            );
         }
 
         $response = $this->getUserResponse();
-        $response->setResponse($content->getContent());
-
+        $response->setData($content instanceof ResponseInterface ? (string) $content->getBody() : $content);
         $response->setResourceOwner($this);
         $response->setOAuthToken(new OAuthToken($accessToken));
 
@@ -71,20 +78,12 @@ class GenericOAuth2ResourceOwner extends AbstractResourceOwner
     }
 
     /**
-     * Retrieve an access token for a given code.
-     *
-     * @param Request $request         The request object from where the code is going to extracted
-     * @param mixed   $redirectUri     The uri to redirect the client back to
-     * @param array   $extraParameters An array of parameters to add to the url
-     *
-     * @return array array containing the access token and it's 'expires_in' value,
-     *               along with any other parameters returned from the authentication
-     *               provider
-     *
-     * @throws AuthenticationException If an OAuth error occurred or no access token is found
+     * {@inheritdoc}
      */
-    public function getAccessToken(Request $request, $redirectUri, array $extraParameters = array())
+    public function getAccessToken(HttpRequest $request, $redirectUri, array $extraParameters = array())
     {
+        OAuthErrorHandler::handleOAuthError($request);
+
         $parameters = array_merge(array(
             'code' => $request->query->get('code'),
             'grant_type' => 'authorization_code',
@@ -130,12 +129,12 @@ class GenericOAuth2ResourceOwner extends AbstractResourceOwner
             throw new AuthenticationException('OAuth error: "Method unsupported."');
         }
 
-        $parameters = array(
+        $parameters = [
             'client_id' => $this->options['client_id'],
             'client_secret' => $this->options['client_secret'],
-        );
+        ];
 
-        $response = $this->httpRequest($this->normalizeUrl($this->options['revoke_token_url'], array('token' => $token)), $parameters, array(), HttpRequestInterface::METHOD_DELETE);
+        $response = $this->httpRequest($this->normalizeUrl($this->options['revoke_token_url'], array('token' => $token)), $parameters, array(), 'DELETE');
 
         return 200 === $response->getStatusCode();
     }
@@ -143,7 +142,7 @@ class GenericOAuth2ResourceOwner extends AbstractResourceOwner
     /**
      * {@inheritdoc}
      */
-    public function handles(Request $request)
+    public function handles(HttpRequest $request)
     {
         return $request->query->has('code');
     }
@@ -208,20 +207,13 @@ class GenericOAuth2ResourceOwner extends AbstractResourceOwner
     {
         parent::configureOptions($resolver);
 
-        $resolver->setDefaults(array(
+        $resolver->setDefaults([
             'attr_name' => 'access_token',
             'use_commas_in_scope' => false,
             'use_bearer_authorization' => true,
-        ));
+        ]);
 
-        // Symfony <2.6 BC
-        if (method_exists($resolver, 'setDefined')) {
-            $resolver->setDefined('revoke_token_url');
-        } else {
-            $resolver->setOptional(array(
-                'revoke_token_url',
-            ));
-        }
+        $resolver->setDefined('revoke_token_url');
 
         // Unfortunately some resource owners break the spec by using commas instead
         // of spaces to separate scopes (Disqus, Facebook, Github, Vkontante)
@@ -237,13 +229,16 @@ class GenericOAuth2ResourceOwner extends AbstractResourceOwner
             return str_replace(',', ' ', $value);
         };
 
-        // Symfony <2.6 BC
-        if (method_exists($resolver, 'setNormalizer')) {
-            $resolver->setNormalizer('scope', $scopeNormalizer);
-        } else {
-            $resolver->setNormalizers(array(
-                'scope' => $scopeNormalizer,
-            ));
-        }
+        $resolver->setNormalizer('scope', $scopeNormalizer);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function httpRequest($url, $content = null, array $headers = [], $method = null)
+    {
+        $headers += array('Content-Type' => 'application/x-www-form-urlencoded');
+
+        return parent::httpRequest($url, $content, $headers, $method);
     }
 }

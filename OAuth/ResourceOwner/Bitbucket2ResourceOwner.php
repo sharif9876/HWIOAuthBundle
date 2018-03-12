@@ -34,6 +34,30 @@ class Bitbucket2ResourceOwner extends GenericOAuth2ResourceOwner
     /**
      * {@inheritdoc}
      */
+    public function getUserInformation(array $accessToken, array $extraParameters = array())
+    {
+        $response = parent::getUserInformation($accessToken, $extraParameters);
+        $responseData = $response->getData();
+
+        // fetch the email addresses linked to the account
+        if (empty($responseData['email'])) {
+            $content = $this->httpRequest($this->normalizeUrl($this->options['emails_url']), null, array('Authorization' => 'Bearer '.$accessToken['access_token']));
+            foreach ($this->getResponseContent($content)['values'] as $email) {
+                // we only need the primary email address
+                if (true === $email['is_primary']) {
+                    $responseData['email'] = $email['email'];
+                }
+            }
+
+            $response->setData($responseData);
+        }
+
+        return $response;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     protected function configureOptions(OptionsResolver $resolver)
     {
         parent::configureOptions($resolver);
@@ -44,28 +68,5 @@ class Bitbucket2ResourceOwner extends GenericOAuth2ResourceOwner
             'infos_url' => 'https://api.bitbucket.org/2.0/user',
             'emails_url' => 'https://api.bitbucket.org/2.0/user/emails',
         ));
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getUserInformation(array $accessToken, array $extraParameters = array())
-    {
-        $response = parent::getUserInformation($accessToken, $extraParameters);
-        $responseData = $response->getResponse();
-
-        // fetch the email addresses linked to the account
-        if (empty($responseData['email'])) {
-            $content = $this->httpRequest($this->normalizeUrl($this->options['emails_url']), null, array('Authorization: Bearer '.$accessToken['access_token']));
-            foreach ($this->getResponseContent($content)['values'] as $email) {
-                // we only need the primary email address
-                if (true === $email['is_primary']) {
-                    $responseData['email'] = $email['email'];
-                }
-            }
-            $response->setResponse($responseData);
-        }
-
-        return $response;
     }
 }

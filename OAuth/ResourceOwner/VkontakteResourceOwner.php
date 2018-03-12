@@ -12,8 +12,9 @@
 namespace HWI\Bundle\OAuthBundle\OAuth\ResourceOwner;
 
 use HWI\Bundle\OAuthBundle\Security\Core\Authentication\Token\OAuthToken;
-use Symfony\Component\OptionsResolver\OptionsResolver;
+use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\OptionsResolver\Options;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
  * VkontakteResourceOwner.
@@ -48,14 +49,15 @@ class VkontakteResourceOwner extends GenericOAuth2ResourceOwner
             'name_case' => $this->options['name_case'],
         ));
 
-        $content = $this->doGetUserInformationRequest($url)->getContent();
+        $content = $this->doGetUserInformationRequest($url);
 
         $response = $this->getUserResponse();
-        $response->setResponse($content);
+        // This will translate string response into array
+        $response->setData($content instanceof ResponseInterface ? (string) $content->getBody() : $content);
         $response->setResourceOwner($this);
         $response->setOAuthToken(new OAuthToken($accessToken));
 
-        $content = $response->getResponse();
+        $content = $response->getData();
         $content['email'] = isset($accessToken['email']) ? $accessToken['email'] : null;
         if (isset($content['screen_name'])) {
             $content['nickname'] = $content['screen_name'];
@@ -63,7 +65,7 @@ class VkontakteResourceOwner extends GenericOAuth2ResourceOwner
             $content['nickname'] = isset($content['nickname']) ? $content['nickname'] : null;
         }
 
-        $response->setResponse($content);
+        $response->setData($content);
 
         return $response;
     }
@@ -96,13 +98,6 @@ class VkontakteResourceOwner extends GenericOAuth2ResourceOwner
             return is_array($value) ? implode(',', $value) : $value;
         };
 
-        // Symfony <2.6 BC
-        if (method_exists($resolver, 'setNormalizer')) {
-            $resolver->setNormalizer('fields', $fieldsNormalizer);
-        } else {
-            $resolver->setNormalizers(array(
-                'fields' => $fieldsNormalizer,
-            ));
-        }
+        $resolver->setNormalizer('fields', $fieldsNormalizer);
     }
 }

@@ -47,14 +47,14 @@ class MailRuResourceOwner extends GenericOAuth2ResourceOwner
 
         $url = $this->normalizeUrl($this->options['infos_url'], $params);
 
-        $content = $this->doGetUserInformationRequest($url)->getContent();
+        $content = (string) $this->doGetUserInformationRequest($url)->getBody();
         $content = json_decode($content, true);
         if (isset($content[0])) {
             $content = (array) $content[0];
         }
 
         $response = $this->getUserResponse();
-        $response->setResponse($content);
+        $response->setData($content);
         $response->setResourceOwner($this);
         $response->setOAuthToken(new OAuthToken($accessToken));
 
