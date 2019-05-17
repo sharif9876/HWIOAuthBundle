@@ -20,34 +20,33 @@ use Symfony\Component\Security\Http\SecurityEvents;
 
 class ConnectControllerRegistrationActionTest extends AbstractConnectControllerTest
 {
-    /**
-     * @expectedException \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
-     */
     public function testNotEnabled()
     {
+        $this->expectException(\Symfony\Component\HttpKernel\Exception\NotFoundHttpException::class);
+
         $this->container->setParameter('hwi_oauth.connect', false);
 
         $this->controller->registrationAction($this->request, time());
     }
 
-    /**
-     * @expectedException \Symfony\Component\Security\Core\Exception\AccessDeniedException
-     * @expectedExceptionMessage Cannot connect already registered account.
-     */
     public function testAlreadyConnected()
     {
+        $this->expectException(\Symfony\Component\Security\Core\Exception\AccessDeniedException::class);
+        $this->expectExceptionMessage('Cannot connect already registered account.');
+
         $this->mockAuthorizationCheck();
 
         $this->controller->registrationAction($this->request, time());
     }
 
-    /**
-     * @expectedException \Exception
-     * @expectedExceptionMessage Cannot register an account.
-     */
     public function testCannotRegisterBadError()
     {
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Cannot register an account.');
+
         $key = time();
+
+        $this->mockAuthorizationCheck(false);
 
         $this->session->expects($this->once())
             ->method('get')
@@ -67,6 +66,8 @@ class ConnectControllerRegistrationActionTest extends AbstractConnectControllerT
     {
         $key = time();
 
+        $this->mockAuthorizationCheck(false);
+
         $this->session->expects($this->once())
             ->method('get')
             ->with('_hwi_oauth.registration_error.'.$key)
@@ -80,9 +81,7 @@ class ConnectControllerRegistrationActionTest extends AbstractConnectControllerT
 
         $this->makeRegistrationForm();
 
-        $registrationFormHandler = $this->getMockBuilder(RegistrationFormHandlerInterface::class)
-            ->disableOriginalConstructor()
-            ->getMock();
+        $registrationFormHandler = $this->createMock(RegistrationFormHandlerInterface::class);
         $registrationFormHandler->expects($this->once())
             ->method('process')
             ->withAnyParameters()
@@ -108,6 +107,8 @@ class ConnectControllerRegistrationActionTest extends AbstractConnectControllerT
     {
         $key = time();
 
+        $this->mockAuthorizationCheck(false);
+
         $this->session->expects($this->once())
             ->method('get')
             ->with('_hwi_oauth.registration_error.'.$key)
@@ -116,9 +117,7 @@ class ConnectControllerRegistrationActionTest extends AbstractConnectControllerT
 
         $this->makeRegistrationForm();
 
-        $registrationFormHandler = $this->getMockBuilder(RegistrationFormHandlerInterface::class)
-            ->disableOriginalConstructor()
-            ->getMock();
+        $registrationFormHandler = $this->createMock(RegistrationFormHandlerInterface::class);
         $registrationFormHandler->expects($this->once())
             ->method('process')
             ->withAnyParameters()
@@ -156,27 +155,18 @@ class ConnectControllerRegistrationActionTest extends AbstractConnectControllerT
 
     private function makeRegistrationForm()
     {
-        $registrationForm = $this->getMockBuilder(Form::class)
-            ->disableOriginalConstructor()
-            ->getMock();
+        $registrationForm = $this->createMock(Form::class);
         $registrationForm->expects($this->any())
             ->method('getData')
             ->willReturn(new User());
 
         $this->container->setParameter('hwi_oauth.fosub_enabled', true);
 
-        if (interface_exists('FOS\UserBundle\Form\Factory\FactoryInterface')) {
-            $registrationFormFactory = $this->getMockBuilder(FactoryInterface::class)
-                ->disableOriginalConstructor()
-                ->getMock();
-            $registrationFormFactory->expects($this->any())
-                ->method('createForm')
-                ->willReturn($registrationForm);
+        $registrationFormFactory = $this->createMock(FactoryInterface::class);
+        $registrationFormFactory->expects($this->any())
+            ->method('createForm')
+            ->willReturn($registrationForm);
 
-            $this->container->set('hwi_oauth.registration.form.factory', $registrationFormFactory);
-        } else {
-            // FOSUser 1.3 BC. To be removed.
-            $this->container->set('hwi_oauth.registration.form', $registrationForm);
-        }
+        $this->container->set('hwi_oauth.registration.form.factory', $registrationFormFactory);
     }
 }

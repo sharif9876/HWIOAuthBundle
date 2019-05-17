@@ -19,7 +19,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
  *
  * @author Tomas Pecserke <tomas.pecserke@gmail.com>
  */
-class SetResourceOwnerServiceNameCompilerPass implements CompilerPassInterface
+final class SetResourceOwnerServiceNameCompilerPass implements CompilerPassInterface
 {
     /**
      * {@inheritdoc}
@@ -33,7 +33,7 @@ class SetResourceOwnerServiceNameCompilerPass implements CompilerPassInterface
 
             $aliasIdParts = explode('.', $alias);
             $resourceOwnerDefinition = $container->findDefinition($alias);
-            $resourceOwnerDefinition->addMethodCall('setName', array(end($aliasIdParts)));
+            $resourceOwnerDefinition->addMethodCall('setName', [end($aliasIdParts)]);
         }
     }
 }

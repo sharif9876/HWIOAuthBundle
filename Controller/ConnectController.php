@@ -19,7 +19,7 @@ use HWI\Bundle\OAuthBundle\OAuth\ResourceOwnerInterface;
 use HWI\Bundle\OAuthBundle\OAuth\Response\UserResponseInterface;
 use HWI\Bundle\OAuthBundle\Security\Core\Authentication\Token\OAuthToken;
 use HWI\Bundle\OAuthBundle\Security\Core\Exception\AccountNotLinkedException;
-use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\Extension\Core\Type\FormType;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -38,7 +38,7 @@ use Symfony\Component\Security\Http\SecurityEvents;
 /**
  * @author Alexander <iam.asm89@gmail.com>
  */
-class ConnectController extends Controller
+final class ConnectController extends AbstractController
 {
     /**
      * Action that handles the login 'form'. If connecting is enabled the
@@ -61,9 +61,13 @@ class ConnectController extends Controller
         if ($connect && !$hasUser && $error instanceof AccountNotLinkedException) {
             $key = time();
             $session = $request->getSession();
+            if (!$session->isStarted()) {
+                $session->start();
+            }
+
             $session->set('_hwi_oauth.registration_error.'.$key, $error);
 
-            return $this->redirectToRoute('hwi_oauth_connect_registration', array('key' => $key));
+            return $this->redirectToRoute('hwi_oauth_connect_registration', ['key' => $key]);
         }
 
         if ($error) {
@@ -74,9 +78,9 @@ class ConnectController extends Controller
             }
         }
 
-        return $this->render('@HWIOAuth/Connect/login.html.twig', array(
+        return $this->render('@HWIOAuth/Connect/login.html.twig', [
             'error' => $error,
-        ));
+        ]);
     }
 
     /**
@@ -105,6 +109,10 @@ class ConnectController extends Controller
         }
 
         $session = $request->getSession();
+        if (!$session->isStarted()) {
+            $session->start();
+        }
+
         $error = $session->get('_hwi_oauth.registration_error.'.$key);
         $session->remove('_hwi_oauth.registration_error.'.$key);
 
@@ -119,12 +127,7 @@ class ConnectController extends Controller
 
         /* @var $form FormInterface */
         if ($this->container->getParameter('hwi_oauth.fosub_enabled')) {
-            // enable compatibility with FOSUserBundle 1.3.x and 2.x
-            if (interface_exists('FOS\UserBundle\Form\Factory\FactoryInterface')) {
-                $form = $this->container->get('hwi_oauth.registration.form.factory')->createForm();
-            } else {
-                $form = $this->container->get('hwi_oauth.registration.form');
-            }
+            $form = $this->container->get('hwi_oauth.registration.form.factory')->createForm();
         } else {
             $form = $this->container->get('hwi_oauth.registration.form');
         }
@@ -143,9 +146,9 @@ class ConnectController extends Controller
                 if ($targetPath = $this->getTargetPath($session)) {
                     $response = $this->redirect($targetPath);
                 } else {
-                    $response = $this->render('@HWIOAuth/Connect/registration_success.html.twig', array(
+                    $response = $this->render('@HWIOAuth/Connect/registration_success.html.twig', [
                         'userInformation' => $userInformation,
-                    ));
+                    ]);
                 }
             }
 
@@ -165,11 +168,11 @@ class ConnectController extends Controller
             return $response;
         }
 
-        return $this->render('@HWIOAuth/Connect/registration.html.twig', array(
+        return $this->render('@HWIOAuth/Connect/registration.html.twig', [
             'key' => $key,
             'form' => $form->createView(),
             'userInformation' => $userInformation,
-        ));
+        ]);
     }
 
     /**
@@ -201,6 +204,10 @@ class ConnectController extends Controller
         $resourceOwner = $this->getResourceOwnerByName($service);
 
         $session = $request->getSession();
+        if (!$session->isStarted()) {
+            $session->start();
+        }
+
         $key = $request->query->get('key', time());
 
         if ($resourceOwner->handles($request)) {
@@ -229,11 +236,9 @@ class ConnectController extends Controller
             return $this->getConfirmationResponse($request, $accessToken, $service);
         }
 
-        // Symfony <3.0 BC
         /** @var $form FormInterface */
-        $form = method_exists('Symfony\Component\Form\AbstractType', 'getBlockPrefix')
-            ? $this->createForm(FormType::class)
-            : $this->createForm('form');
+        $form = $this->createForm(FormType::class);
+
         // Handle the form
         $form->handleRequest($request);
 
@@ -248,12 +253,12 @@ class ConnectController extends Controller
             return $response;
         }
 
-        return $this->render('@HWIOAuth/Connect/connect_confirm.html.twig', array(
+        return $this->render('@HWIOAuth/Connect/connect_confirm.html.twig', [
             'key' => $key,
             'service' => $service,
             'form' => $form->createView(),
             'userInformation' => $resourceOwner->getUserInformation($accessToken),
-        ));
+        ]);
     }
 
     /**
@@ -272,11 +277,14 @@ class ConnectController extends Controller
             throw new NotFoundHttpException($e->getMessage(), $e);
         }
 
+        $session = $request->getSession();
+
         // Check for a return path and store it before redirect
-        if ($request->hasSession()) {
+        if (null !== $session) {
             // initialize the session for preventing SessionUnavailableException
-            $session = $request->getSession();
-            $session->start();
+            if (!$session->isStarted()) {
+                $session->start();
+            }
 
             foreach ($this->container->getParameter('hwi_oauth.firewall_names') as $providerKey) {
                 $sessionKey = '_security.'.$providerKey.'.target_path';
@@ -311,17 +319,19 @@ class ConnectController extends Controller
     {
         $authenticationErrorKey = Security::AUTHENTICATION_ERROR;
 
-        $session = $request->getSession();
         if ($request->attributes->has($authenticationErrorKey)) {
-            $error = $request->attributes->get($authenticationErrorKey);
-        } elseif (null !== $session && $session->has($authenticationErrorKey)) {
-            $error = $session->get($authenticationErrorKey);
-            $session->remove($authenticationErrorKey);
-        } else {
-            $error = '';
+            return $request->attributes->get($authenticationErrorKey);
         }
 
-        return $error;
+        $session = $request->getSession();
+        if (null !== $session && $session->has($authenticationErrorKey)) {
+            $error = $session->get($authenticationErrorKey);
+            $session->remove($authenticationErrorKey);
+
+            return $error;
+        }
+
+        return '';
     }
 
     /**
@@ -348,24 +358,6 @@ class ConnectController extends Controller
         }
 
         throw new NotFoundHttpException(sprintf("No resource owner with name '%s'.", $name));
-    }
-
-    /**
-     * Generates a route.
-     *
-     * @deprecated since version 0.4. Will be removed in 1.0.
-     *
-     * @param string $route    Route name
-     * @param array  $params   Route parameters
-     * @param bool   $absolute absolute url or note
-     *
-     * @return string
-     */
-    protected function generate($route, array $params = array(), $absolute = false)
-    {
-        @trigger_error('The '.__METHOD__.' method is deprecated since version 0.4 and will be removed in 1.0. Use Symfony\Bundle\FrameworkBundle\Controller\Controller::generateUrl instead.', E_USER_DEPRECATED);
-
-        return $this->container->get('router')->generate($route, $params, $absolute);
     }
 
     /**
@@ -449,7 +441,7 @@ class ConnectController extends Controller
         if ($currentToken instanceof OAuthToken) {
             // Update user token with new details
             $newToken =
-                is_array($accessToken) &&
+                \is_array($accessToken) &&
                 (isset($accessToken['access_token']) || isset($accessToken['oauth_token'])) ?
                     $accessToken : $currentToken->getRawToken();
 
@@ -460,10 +452,10 @@ class ConnectController extends Controller
             if ($targetPath = $this->getTargetPath($request->getSession())) {
                 $response = $this->redirect($targetPath);
             } else {
-                $response = $this->render('@HWIOAuth/Connect/connect_success.html.twig', array(
+                $response = $this->render('@HWIOAuth/Connect/connect_success.html.twig', [
                     'userInformation' => $userInformation,
                     'service' => $service,
-                ));
+                ]);
             }
         }
 

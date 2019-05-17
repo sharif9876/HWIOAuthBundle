@@ -23,10 +23,11 @@ class SlackResourceOwner extends GenericOAuth2ResourceOwner
     /**
      * {@inheritdoc}
      */
-    protected $paths = array(
-        'identifier' => 'user_id',
-        'nickname' => 'user',
-    );
+    protected $paths = [
+        'identifier' => 'user.id',
+        'nickname' => 'user.name',
+        'email' => 'user.email',
+    ];
 
     /**
      * {@inheritdoc}
@@ -35,15 +36,15 @@ class SlackResourceOwner extends GenericOAuth2ResourceOwner
     {
         parent::configureOptions($resolver);
 
-        $resolver->setDefaults(array(
+        $resolver->setDefaults([
             'authorization_url' => 'https://slack.com/oauth/authorize',
             'access_token_url' => 'https://slack.com/api/oauth.access',
-            'infos_url' => 'https://slack.com/api/auth.test',
+            'infos_url' => 'https://slack.com/api/users.identity',
 
             'scope' => 'identify',
 
             'use_bearer_authorization' => false,
             'attr_name' => 'token',
-        ));
+        ]);
     }
 }

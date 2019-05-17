@@ -1,5 +1,51 @@
 Changelog
 =========
+## 1.0.0 (2019-xx-xx)
+* Dropped support for PHP 5.6 and 7.0,
+* Dropped support for FOSUserBundle 1.3,
+* Dropped support for PHPUnit 5,
+* Dropped support for Symfony 2.8,
+* Minimum Symfony 3 requirement is 3.4,
+* Minimum Symfony 4 requirement is 4.2,
+* Fixed: WindowsLive Resource Owner token request,
+* Fixed: Update Facebook API to v3.1,
+* Fixed: Update Linkedin API to v2,
+* Fixed: YahooResourceOwner::doGetUserInformationRequest uses wrong arguments,
+* Fixed: Symfony 4.2 deprecation warning in `symfony/config`,
+* Fixed: SensioConnect now uses new API URLs,
+* Added: Genius.com resource owner,
+* Added: HTTPlug 2.0 support,
+* Added: Keycloak resource owner,
+* [BC break] Class `Configuration` has been marked final,
+* [BC break] Class `ConnectController` has been marked final,
+* [BC break] Class `HWIOAuthExtension` has been marked final,
+* [BC break] Class `OAuthExtension` has been marked final,
+* [BC break] Class `SetResourceOwnerServiceNameCompilerPass` has been marked final,
+* [BC break] Class `ConnectController` extends `AbstractController` instead of `Controller`,
+* [BC break] Service `hwi_oauth.http_client` has been marked private,
+* [BC break] Several service class parameters have been removed,
+
+## 0.6.3 (2018-07-31)
+* Fixed: Vkontakte profile picture & nickname path,
+* Fixed: `Content-Length` header must be a string,
+* Fixed: Upgraded GitLab end point to v4,
+* Fixed: Resource owner map parameters must be public,
+* Fixed: Azure resource owner `infos_url` should not be empty,
+* Fixed: Don't start sessions twice & don't start sessions if already started,
+* Fixed: Updated BitBucket docs,
+* Added: Further compatibility changes for Symfony 4.1,
+* Added: LinkedIn `first-` & `last-` names,
+* Added: Facebook profile picture
+
+## 0.6.2 (2018-03-28)
+* Fixed: VK requires API version now,
+* Fixed: Updated Slack resource owner to use new Slack API methods,
+* Fixed: Changing authorization and access token to v2 for LinkedIn,
+* Fixed: Fix double call of `getUserInformation()` in `ConnectController`,
+* Fixed: Fix serialization of `AccountNotLinkedException`,
+* Fixed: Check for grant_rule value `IS_AUTHENTICATED_FULLY` in DI configuration,
+* Fixed: Don't execute `OAuthProvider::refreshAccessToken()` when there is no refresh token
+
 ## 0.6.1 (2018-01-23)
 * BC BREAK: Replaced `PHPUnit_Framework_TestCase` with `PHPUnit\Framework\TestCase` in tests,
 * Added: Implemented `getUserInformation()` for Dropbox v2,
