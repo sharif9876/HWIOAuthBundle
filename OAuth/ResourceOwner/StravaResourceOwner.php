@@ -3,7 +3,7 @@
 /*
  * This file is part of the HWIOAuthBundle package.
  *
- * (c) Hardware.Info <opensource@hardware.info>
+ * (c) Hardware Info <opensource@hardware.info>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -23,12 +23,12 @@ class StravaResourceOwner extends GenericOAuth2ResourceOwner
     /**
      * {@inheritdoc}
      */
-    protected $paths = array(
+    protected $paths = [
         'identifier' => 'id',
-        'realname' => array('firstname', 'lastname'),
+        'realname' => ['firstname', 'lastname'],
         'profilepicture' => 'profile_medium',
         'email' => 'email',
-    );
+    ];
 
     /**
      * {@inheritdoc}
@@ -37,10 +37,10 @@ class StravaResourceOwner extends GenericOAuth2ResourceOwner
     {
         parent::configureOptions($resolver);
 
-        $resolver->setDefaults(array(
+        $resolver->setDefaults([
             'authorization_url' => 'https://www.strava.com/oauth/authorize',
             'access_token_url' => 'https://www.strava.com/oauth/token',
             'infos_url' => 'https://www.strava.com/api/v3/athlete',
-        ));
+        ]);
     }
 }

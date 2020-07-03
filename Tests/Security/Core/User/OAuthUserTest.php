@@ -3,7 +3,7 @@
 /*
  * This file is part of the HWIOAuthBundle package.
  *
- * (c) Hardware.Info <opensource@hardware.info>
+ * (c) Hardware Info <opensource@hardware.info>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -21,14 +21,14 @@ class OAuthUserTest extends TestCase
      */
     private $user;
 
-    public function setUp()
+    protected function setUp(): void
     {
         $this->user = new OAuthUser('asm89');
     }
 
     public function testGetRoles()
     {
-        $this->assertEquals(array('ROLE_USER', 'ROLE_OAUTH_USER'), $this->user->getRoles());
+        $this->assertEquals(['ROLE_USER', 'ROLE_OAUTH_USER'], $this->user->getRoles());
     }
 
     public function testGetPassword()

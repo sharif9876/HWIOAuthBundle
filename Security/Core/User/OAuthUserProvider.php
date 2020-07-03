@@ -3,7 +3,7 @@
 /*
  * This file is part of the HWIOAuthBundle package.
  *
- * (c) Hardware.Info <opensource@hardware.info>
+ * (c) Hardware Info <opensource@hardware.info>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -44,8 +44,8 @@ class OAuthUserProvider implements UserProviderInterface, OAuthAwareUserProvider
      */
     public function refreshUser(UserInterface $user)
     {
-        if (!$this->supportsClass(get_class($user))) {
-            throw new UnsupportedUserException(sprintf('Unsupported user class "%s"', get_class($user)));
+        if (!$this->supportsClass(\get_class($user))) {
+            throw new UnsupportedUserException(sprintf('Unsupported user class "%s"', \get_class($user)));
         }
 
         return $this->loadUserByUsername($user->getUsername());

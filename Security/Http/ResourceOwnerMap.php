@@ -3,7 +3,7 @@
 /*
  * This file is part of the HWIOAuthBundle package.
  *
- * (c) Hardware.Info <opensource@hardware.info>
+ * (c) Hardware Info <opensource@hardware.info>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -93,7 +93,7 @@ class ResourceOwnerMap implements ContainerAwareInterface, ResourceOwnerMapInter
     {
         foreach ($this->resourceOwners as $name => $checkPath) {
             if ($this->httpUtils->checkRequestPath($request, $checkPath)) {
-                return array($this->getResourceOwnerByName($name), $checkPath);
+                return [$this->getResourceOwnerByName($name), $checkPath];
             }
         }
 

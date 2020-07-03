@@ -3,7 +3,7 @@
 /*
  * This file is part of the HWIOAuthBundle package.
  *
- * (c) Hardware.Info <opensource@hardware.info>
+ * (c) Hardware Info <opensource@hardware.info>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -17,12 +17,12 @@ class CustomOAuthToken extends OAuthToken
 {
     public function __construct()
     {
-        parent::__construct(array(
+        parent::__construct([
             'access_token' => 'access_token_data',
-        ), array(
+        ], [
             'ROLE_USER',
-        ));
+        ]);
 
-        $this->setUser(new User());
+        $this->setUser(class_exists(\FOS\UserBundle\Model\User::class) ? new FOSUser() : new User());
     }
 }

@@ -3,7 +3,7 @@
 /*
  * This file is part of the HWIOAuthBundle package.
  *
- * (c) Hardware.Info <opensource@hardware.info>
+ * (c) Hardware Info <opensource@hardware.info>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -135,7 +135,7 @@ abstract class AbstractResourceOwner implements ResourceOwnerInterface
      */
     public function getOption($name)
     {
-        if (!array_key_exists($name, $this->options)) {
+        if (!\array_key_exists($name, $this->options)) {
             throw new \InvalidArgumentException(sprintf('Unknown option "%s"', $name));
         }
 
@@ -248,10 +248,12 @@ abstract class AbstractResourceOwner implements ResourceOwnerInterface
             $method = null === $content || '' === $content ? 'GET' : 'POST';
         }
 
-        $headers += array('User-Agent' => 'HWIOAuthBundle (https://github.com/hwi/HWIOAuthBundle)');
-        if (is_string($content)) {
-            $headers += array('Content-Length' => strlen($content));
-        } elseif (is_array($content)) {
+        $headers += ['User-Agent' => 'HWIOAuthBundle (https://github.com/hwi/HWIOAuthBundle)'];
+        if (\is_string($content)) {
+            if (!isset($headers['Content-Length'])) {
+                $headers += ['Content-Length' => (string) \strlen($content)];
+            }
+        } elseif (\is_array($content)) {
             $content = http_build_query($content, '', '&');
         }
 
@@ -279,7 +281,7 @@ abstract class AbstractResourceOwner implements ResourceOwnerInterface
         // First check that content in response exists, due too bug: https://bugs.php.net/bug.php?id=54484
         $content = (string) $rawResponse->getBody();
         if (!$content) {
-            return array();
+            return [];
         }
 
         $response = json_decode($content, true);

@@ -3,7 +3,7 @@
 /*
  * This file is part of the HWIOAuthBundle package.
  *
- * (c) Hardware.Info <opensource@hardware.info>
+ * (c) Hardware Info <opensource@hardware.info>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -24,11 +24,11 @@ class PaypalResourceOwner extends GenericOAuth2ResourceOwner
     /**
      * {@inheritdoc}
      */
-    protected $paths = array(
+    protected $paths = [
         'identifier' => 'user_id',
         'nickname' => 'email',
         'email' => 'email',
-    );
+    ];
 
     /**
      * {@inheritdoc}
@@ -37,13 +37,13 @@ class PaypalResourceOwner extends GenericOAuth2ResourceOwner
     {
         parent::configureOptions($resolver);
 
-        $resolver->setDefaults(array(
+        $resolver->setDefaults([
             'sandbox' => false,
             'scope' => 'openid email',
             'authorization_url' => 'https://www.paypal.com/webapps/auth/protocol/openidconnect/v1/authorize',
             'access_token_url' => 'https://api.paypal.com/v1/identity/openidconnect/tokenservice',
             'infos_url' => 'https://api.paypal.com/v1/identity/openidconnect/userinfo/?schema=openid',
-        ));
+        ]);
 
         $resolver->addAllowedTypes('sandbox', 'bool');
 

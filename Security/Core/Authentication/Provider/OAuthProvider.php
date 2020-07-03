@@ -3,7 +3,7 @@
 /*
  * This file is part of the HWIOAuthBundle package.
  *
- * (c) Hardware.Info <opensource@hardware.info>
+ * (c) Hardware Info <opensource@hardware.info>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -19,9 +19,9 @@ use HWI\Bundle\OAuthBundle\Security\Http\ResourceOwnerMapInterface;
 use Symfony\Component\Security\Core\Authentication\Provider\AuthenticationProviderInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
+use Symfony\Component\Security\Core\Exception\AuthenticationServiceException;
 use Symfony\Component\Security\Core\User\UserCheckerInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
-use Symfony\Component\Security\Core\Exception\AuthenticationServiceException;
 
 /**
  * OAuthProvider.
@@ -130,6 +130,10 @@ class OAuthProvider implements AuthenticationProviderInterface
      */
     protected function refreshToken(TokenInterface $expiredToken, ResourceOwnerInterface $resourceOwner)
     {
+        if (!$expiredToken->getRefreshToken()) {
+            return $expiredToken;
+        }
+
         $token = new OAuthToken($resourceOwner->refreshAccessToken($expiredToken->getRefreshToken()));
         $token->setRefreshToken($expiredToken->getRefreshToken());
         $this->tokenStorage->setToken($token);

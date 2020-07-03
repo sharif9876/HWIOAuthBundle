@@ -3,7 +3,7 @@
 /*
  * This file is part of the HWIOAuthBundle package.
  *
- * (c) Hardware.Info <opensource@hardware.info>
+ * (c) Hardware Info <opensource@hardware.info>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -22,12 +22,18 @@ use Symfony\Component\HttpFoundation\Request;
 
 class FOSUBRegistrationFormHandlerTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        if (!class_exists(\FOS\UserBundle\Model\User::class)) {
+            $this->markTestSkipped('FOSUserBundle not installed.');
+        }
+    }
+
     public function testProcessReturnsFalseForNotPostRequest()
     {
         $formMock = $this->getForm(false);
 
-        $response = $this->getMockBuilder(UserResponseInterface::class)
-            ->getMock();
+        $response = $this->createMock(UserResponseInterface::class);
 
         $handler = new FOSUBRegistrationFormHandler($this->getUserManager(), $this->getMailer());
 
@@ -64,11 +70,9 @@ class FOSUBRegistrationFormHandlerTest extends TestCase
 
     private function getUserManager()
     {
-        $mock = $this->getMockBuilder(UserManagerInterface::class)
-            ->getMock();
+        $mock = $this->createMock(UserManagerInterface::class);
 
-        $userMock = $this->getMockBuilder(UserInterface::class)
-            ->getMock();
+        $userMock = $this->createMock(UserInterface::class);
         $userMock
             ->expects($this->once())
             ->method('setEnabled')
@@ -86,22 +90,17 @@ class FOSUBRegistrationFormHandlerTest extends TestCase
 
     private function getMailer()
     {
-        return $this->getMockBuilder(MailerInterface::class)
-            ->getMock();
+        return $this->createMock(MailerInterface::class);
     }
 
     private function getResponse()
     {
-        return $this->getMockBuilder(UserResponseInterface::class)
-            ->getMock();
+        return $this->createMock(UserResponseInterface::class);
     }
 
     private function getForm($handle = true)
     {
-        $formMock = $this->getMockBuilder(Form::class)
-            ->disableOriginalConstructor()
-            ->getMock()
-        ;
+        $formMock = $this->createMock(Form::class);
 
         if ($handle) {
             $formMock

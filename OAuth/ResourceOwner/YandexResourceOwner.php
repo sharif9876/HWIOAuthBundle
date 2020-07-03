@@ -3,7 +3,7 @@
 /*
  * This file is part of the HWIOAuthBundle package.
  *
- * (c) Hardware.Info <opensource@hardware.info>
+ * (c) Hardware Info <opensource@hardware.info>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -23,17 +23,17 @@ class YandexResourceOwner extends GenericOAuth2ResourceOwner
     /**
      * {@inheritdoc}
      */
-    protected $paths = array(
+    protected $paths = [
         'identifier' => 'id',
         'nickname' => 'display_name',
         'realname' => 'real_name',
         'email' => 'default_email',
-    );
+    ];
 
     /**
      * {@inheritdoc}
      */
-    protected function doGetUserInformationRequest($url, array $parameters = array())
+    protected function doGetUserInformationRequest($url, array $parameters = [])
     {
         // Yandex require to pass the OAuth token as 'oauth_token' instead of 'access_token'
         return $this->httpRequest(str_replace('access_token', 'oauth_token', $url));
@@ -46,10 +46,10 @@ class YandexResourceOwner extends GenericOAuth2ResourceOwner
     {
         parent::configureOptions($resolver);
 
-        $resolver->setDefaults(array(
+        $resolver->setDefaults([
             'authorization_url' => 'https://oauth.yandex.ru/authorize',
             'access_token_url' => 'https://oauth.yandex.ru/token',
             'infos_url' => 'https://login.yandex.ru/info?format=json',
-        ));
+        ]);
     }
 }

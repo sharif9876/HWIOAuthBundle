@@ -3,7 +3,7 @@
 /*
  * This file is part of the HWIOAuthBundle package.
  *
- * (c) Hardware.Info <opensource@hardware.info>
+ * (c) Hardware Info <opensource@hardware.info>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -22,20 +22,20 @@ class OAuthTokenTest extends TestCase
      */
     private $token;
 
-    public function setUp()
+    protected function setUp(): void
     {
-        $this->token = new OAuthToken('access_token', array('ROLE_TEST'));
+        $this->token = new OAuthToken('access_token', ['ROLE_TEST']);
         $this->token->setResourceOwnerName('github');
     }
 
     public function testGets()
     {
-        $expectedToken = array(
+        $expectedToken = [
             'access_token' => 'access_token',
             'refresh_token' => 'refresh_token',
             'expires_in' => '666',
-        );
-        $token = new OAuthToken($expectedToken, array('ROLE_TEST'));
+        ];
+        $token = new OAuthToken($expectedToken, ['ROLE_TEST']);
         $token->setResourceOwnerName('github');
 
         $this->assertEquals($expectedToken, $token->getRawToken());
@@ -70,10 +70,10 @@ class OAuthTokenTest extends TestCase
 
     public function testSerializationOfOAuth1Token()
     {
-        $oauth1Token = new OAuthToken(array(
+        $oauth1Token = new OAuthToken([
             'oauth_token' => 'oauth1_access_token',
             'oauth_token_secret' => 'oauth1_token_secret',
-        ), array('ROLE_TEST'));
+        ], ['ROLE_TEST']);
 
         $oauth1Token->setResourceOwnerName('twitter');
 
@@ -86,28 +86,41 @@ class OAuthTokenTest extends TestCase
 
     public function testIsExpired()
     {
-        $expectedToken = array(
+        $expectedToken = [
             'access_token' => 'access_token',
             'refresh_token' => 'refresh_token',
             'expires_in' => '666',
-        );
-        $token = new OAuthToken($expectedToken, array('ROLE_TEST'));
+        ];
+        $token = new OAuthToken($expectedToken, ['ROLE_TEST']);
 
         $this->assertFalse($token->isExpired());
 
-        $expectedToken = array(
+        $expectedToken = [
             'access_token' => 'access_token',
             'refresh_token' => 'refresh_token',
             'expires_in' => '29',
-        );
-        $token = new OAuthToken($expectedToken, array('ROLE_TEST'));
+        ];
+        $token = new OAuthToken($expectedToken, ['ROLE_TEST']);
         $this->assertTrue($token->isExpired());
     }
 
     public function testSerializeTokenInException()
     {
-        $exception = new AccountNotLinkedException($this->token);
-        $str = serialize($exception);
-        unserialize($str);
+        $resourceOwnerName = 'github';
+
+        $exception = new AccountNotLinkedException();
+        $exception->setToken($this->token);
+        $exception->setResourceOwnerName($resourceOwnerName);
+
+        // Symfony < 4.3 BC layer.
+        if (method_exists($exception, '__serialize')) {
+            $processed = new AccountNotLinkedException();
+            $processed->__unserialize($exception->__serialize());
+        } else {
+            $processed = unserialize(serialize($exception));
+        }
+
+        $this->assertEquals($this->token, $processed->getToken());
+        $this->assertEquals($resourceOwnerName, $processed->getResourceOwnerName());
     }
 }

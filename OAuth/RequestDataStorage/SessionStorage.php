@@ -3,7 +3,7 @@
 /*
  * This file is part of the HWIOAuthBundle package.
  *
- * (c) Hardware.Info <opensource@hardware.info>
+ * (c) Hardware Info <opensource@hardware.info>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -59,13 +59,13 @@ class SessionStorage implements RequestDataStorageInterface
     public function save(ResourceOwnerInterface $resourceOwner, $value, $type = 'token')
     {
         if ('token' === $type) {
-            if (!is_array($value) || !isset($value['oauth_token'])) {
+            if (!\is_array($value) || !isset($value['oauth_token'])) {
                 throw new \InvalidArgumentException('Invalid request token.');
             }
 
             $key = $this->generateKey($resourceOwner, $value['oauth_token'], 'token');
         } else {
-            $key = $this->generateKey($resourceOwner, is_array($value) ? reset($value) : $value, $type);
+            $key = $this->generateKey($resourceOwner, \is_array($value) ? reset($value) : $value, $type);
         }
 
         $this->session->set($key, $value);

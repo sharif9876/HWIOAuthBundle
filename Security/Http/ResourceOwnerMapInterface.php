@@ -3,7 +3,7 @@
 /*
  * This file is part of the HWIOAuthBundle package.
  *
- * (c) Hardware.Info <opensource@hardware.info>
+ * (c) Hardware Info <opensource@hardware.info>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -33,7 +33,7 @@ interface ResourceOwnerMapInterface
      *
      * @param string $name
      *
-     * @return null|ResourceOwnerInterface
+     * @return ResourceOwnerInterface|null
      */
     public function getResourceOwnerByName($name);
 
@@ -42,7 +42,7 @@ interface ResourceOwnerMapInterface
      *
      * @param Request $request
      *
-     * @return null|array
+     * @return array|null
      */
     public function getResourceOwnerByRequest(Request $request);
 
@@ -51,7 +51,7 @@ interface ResourceOwnerMapInterface
      *
      * @param string $name
      *
-     * @return null|string
+     * @return string|null
      */
     public function getResourceOwnerCheckPath($name);
 

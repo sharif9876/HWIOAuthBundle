@@ -3,7 +3,7 @@
 /*
  * This file is part of the HWIOAuthBundle package.
  *
- * (c) Hardware.Info <opensource@hardware.info>
+ * (c) Hardware Info <opensource@hardware.info>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -112,7 +112,7 @@ abstract class AbstractUserResponse implements UserResponseInterface
      */
     public function setData($data)
     {
-        if (is_array($data)) {
+        if (\is_array($data)) {
             $this->data = $data;
         } else {
             // First check that response exists, due too bug: https://bugs.php.net/bug.php?id=54484

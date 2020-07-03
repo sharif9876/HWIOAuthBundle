@@ -3,7 +3,7 @@
 /*
  * This file is part of the HWIOAuthBundle package.
  *
- * (c) Hardware.Info <opensource@hardware.info>
+ * (c) Hardware Info <opensource@hardware.info>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -22,17 +22,17 @@ class StereomoodResourceOwnerTest extends GenericOAuth1ResourceOwnerTest
     "oauth_token": "token"
 }
 json;
-    protected $paths = array(
+    protected $paths = [
         'identifier' => 'oauth_token',
         'nickname' => 'oauth_token',
-    );
+    ];
 
     public function testGetUserInformation()
     {
-        $accessToken = array(
+        $accessToken = [
             'oauth_token' => 'token',
             'oauth_token_secret' => 'secret',
-        );
+        ];
 
         $userResponse = $this->resourceOwner->getUserInformation($accessToken);
 
@@ -47,12 +47,12 @@ json;
     public function testCustomResponseClass()
     {
         $class = CustomUserResponse::class;
-        $resourceOwner = $this->createResourceOwner('oauth1', array('user_response_class' => $class));
+        $resourceOwner = $this->createResourceOwner('oauth1', ['user_response_class' => $class]);
 
-        $accessToken = array(
+        $accessToken = [
             'oauth_token' => 'token',
             'oauth_token_secret' => 'secret',
-        );
+        ];
 
         $userResponse = $resourceOwner->getUserInformation($accessToken);
 

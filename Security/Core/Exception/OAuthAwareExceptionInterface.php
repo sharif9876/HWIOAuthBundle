@@ -3,7 +3,7 @@
 /*
  * This file is part of the HWIOAuthBundle package.
  *
- * (c) Hardware.Info <opensource@hardware.info>
+ * (c) Hardware Info <opensource@hardware.info>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -38,21 +38,21 @@ interface OAuthAwareExceptionInterface
     /**
      * Get the refresh token information.
      *
-     * @return null|string
+     * @return string|null
      */
     public function getRefreshToken();
 
     /**
      * Get the info when token will expire.
      *
-     * @return null|int
+     * @return int|null
      */
     public function getExpiresIn();
 
     /**
      * Get the oauth secret token.
      *
-     * @return null|string
+     * @return string|null
      */
     public function getTokenSecret();
 

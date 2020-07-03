@@ -3,7 +3,7 @@
 /*
  * This file is part of the HWIOAuthBundle package.
  *
- * (c) Hardware.Info <opensource@hardware.info>
+ * (c) Hardware Info <opensource@hardware.info>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -19,7 +19,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
  *
  * @author Tomas Pecserke <tomas.pecserke@gmail.com>
  */
-class SetResourceOwnerServiceNameCompilerPass implements CompilerPassInterface
+final class SetResourceOwnerServiceNameCompilerPass implements CompilerPassInterface
 {
     /**
      * {@inheritdoc}
@@ -33,7 +33,7 @@ class SetResourceOwnerServiceNameCompilerPass implements CompilerPassInterface
 
             $aliasIdParts = explode('.', $alias);
             $resourceOwnerDefinition = $container->findDefinition($alias);
-            $resourceOwnerDefinition->addMethodCall('setName', array(end($aliasIdParts)));
+            $resourceOwnerDefinition->addMethodCall('setName', [end($aliasIdParts)]);
         }
     }
 }

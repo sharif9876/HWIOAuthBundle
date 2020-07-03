@@ -3,7 +3,7 @@
 /*
  * This file is part of the HWIOAuthBundle package.
  *
- * (c) Hardware.Info <opensource@hardware.info>
+ * (c) Hardware Info <opensource@hardware.info>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -11,38 +11,38 @@
 
 namespace HWI\Bundle\OAuthBundle\Tests\Controller;
 
+use HWI\Bundle\OAuthBundle\Event\FilterUserResponseEvent;
+use HWI\Bundle\OAuthBundle\Event\GetResponseUserEvent;
 use HWI\Bundle\OAuthBundle\HWIOAuthEvents;
 use HWI\Bundle\OAuthBundle\Tests\Fixtures\CustomOAuthToken;
+use Symfony\Component\EventDispatcher\LegacyEventDispatcherProxy;
 use Symfony\Component\Form\FormInterface;
 
 class ConnectControllerConnectServiceActionTest extends AbstractConnectControllerTest
 {
-    /**
-     * @expectedException \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
-     */
     public function testNotEnabled()
     {
+        $this->expectException(\Symfony\Component\HttpKernel\Exception\NotFoundHttpException::class);
+
         $this->container->setParameter('hwi_oauth.connect', false);
 
         $this->controller->connectServiceAction($this->request, 'facebook');
     }
 
-    /**
-     * @expectedException \Symfony\Component\Security\Core\Exception\AccessDeniedException
-     * @expectedExceptionMessage Cannot connect an account.
-     */
     public function testAlreadyConnected()
     {
+        $this->expectException(\Symfony\Component\Security\Core\Exception\AccessDeniedException::class);
+        $this->expectExceptionMessage('Cannot connect an account.');
+
         $this->mockAuthorizationCheck(false);
 
         $this->controller->connectServiceAction($this->request, 'facebook');
     }
 
-    /**
-     * @expectedException \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
-     */
     public function testUnknownResourceOwner()
     {
+        $this->expectException(\Symfony\Component\HttpKernel\Exception\NotFoundHttpException::class);
+
         $this->container->setParameter('hwi_oauth.firewall_names', []);
 
         $this->mockAuthorizationCheck();
@@ -61,7 +61,7 @@ class ConnectControllerConnectServiceActionTest extends AbstractConnectControlle
         $this->session->expects($this->once())
             ->method('get')
             ->with('_hwi_oauth.connect_confirmation.'.$key)
-            ->willReturn(array())
+            ->willReturn([])
         ;
 
         $this->tokenStorage->expects($this->once())
@@ -69,19 +69,23 @@ class ConnectControllerConnectServiceActionTest extends AbstractConnectControlle
             ->willReturn(new CustomOAuthToken())
         ;
 
-        $form = $this->getMockBuilder(FormInterface::class)
-            ->disableOriginalConstructor()
-            ->getMock();
+        $form = $this->createMock(FormInterface::class);
         $this->formFactory->expects($this->once())
             ->method('create')
             ->willReturn($form)
         ;
 
         $this->eventDispatcher->expects($this->once())->method('dispatch');
-        $this->eventDispatcher->expects($this->at(0))
-            ->method('dispatch')
-            ->with(HWIOAuthEvents::CONNECT_INITIALIZE)
-        ;
+
+        if (class_exists(LegacyEventDispatcherProxy::class)) {
+            $this->eventDispatcher->expects($this->at(0))
+                ->method('dispatch')
+                ->with($this->isInstanceOf(GetResponseUserEvent::class), HWIOAuthEvents::CONNECT_INITIALIZE);
+        } else {
+            $this->eventDispatcher->expects($this->at(0))
+                ->method('dispatch')
+                ->with(HWIOAuthEvents::CONNECT_INITIALIZE);
+        }
 
         $this->twig->expects($this->once())
             ->method('render')
@@ -103,12 +107,10 @@ class ConnectControllerConnectServiceActionTest extends AbstractConnectControlle
         $this->session->expects($this->once())
             ->method('get')
             ->with('_hwi_oauth.connect_confirmation.'.$key)
-            ->willReturn(array())
+            ->willReturn([])
         ;
 
-        $form = $this->getMockBuilder(FormInterface::class)
-            ->disableOriginalConstructor()
-            ->getMock();
+        $form = $this->createMock(FormInterface::class);
         $this->formFactory->expects($this->once())
             ->method('create')
             ->willReturn($form)
@@ -123,14 +125,21 @@ class ConnectControllerConnectServiceActionTest extends AbstractConnectControlle
         ;
 
         $this->eventDispatcher->expects($this->exactly(2))->method('dispatch');
-        $this->eventDispatcher->expects($this->at(0))
-            ->method('dispatch')
-            ->with(HWIOAuthEvents::CONNECT_CONFIRMED)
-        ;
-        $this->eventDispatcher->expects($this->at(1))
-            ->method('dispatch')
-            ->with(HWIOAuthEvents::CONNECT_COMPLETED)
-        ;
+        if (class_exists(LegacyEventDispatcherProxy::class)) {
+            $this->eventDispatcher->expects($this->at(0))
+                ->method('dispatch')
+                ->with($this->isInstanceOf(GetResponseUserEvent::class), HWIOAuthEvents::CONNECT_CONFIRMED);
+            $this->eventDispatcher->expects($this->at(1))
+                ->method('dispatch')
+                ->with($this->isInstanceOf(FilterUserResponseEvent::class), HWIOAuthEvents::CONNECT_COMPLETED);
+        } else {
+            $this->eventDispatcher->expects($this->at(0))
+                ->method('dispatch')
+                ->with(HWIOAuthEvents::CONNECT_CONFIRMED);
+            $this->eventDispatcher->expects($this->at(1))
+                ->method('dispatch')
+                ->with(HWIOAuthEvents::CONNECT_COMPLETED);
+        }
 
         $this->twig->expects($this->once())
             ->method('render')
@@ -152,7 +161,7 @@ class ConnectControllerConnectServiceActionTest extends AbstractConnectControlle
         $this->session->expects($this->once())
             ->method('get')
             ->with('_hwi_oauth.connect_confirmation.'.$key)
-            ->willReturn(array())
+            ->willReturn([])
         ;
 
         $this->tokenStorage->expects($this->once())
@@ -161,14 +170,26 @@ class ConnectControllerConnectServiceActionTest extends AbstractConnectControlle
         ;
 
         $this->eventDispatcher->expects($this->exactly(2))->method('dispatch');
-        $this->eventDispatcher->expects($this->at(0))
-            ->method('dispatch')
-            ->with(HWIOAuthEvents::CONNECT_CONFIRMED)
-        ;
-        $this->eventDispatcher->expects($this->at(1))
-            ->method('dispatch')
-            ->with(HWIOAuthEvents::CONNECT_COMPLETED)
-        ;
+
+        if (class_exists(LegacyEventDispatcherProxy::class)) {
+            $this->eventDispatcher->expects($this->at(0))
+                ->method('dispatch')
+                ->with($this->isInstanceOf(GetResponseUserEvent::class), HWIOAuthEvents::CONNECT_CONFIRMED)
+            ;
+            $this->eventDispatcher->expects($this->at(1))
+                ->method('dispatch')
+                ->with($this->isInstanceOf(FilterUserResponseEvent::class), HWIOAuthEvents::CONNECT_COMPLETED)
+            ;
+        } else {
+            $this->eventDispatcher->expects($this->at(0))
+                ->method('dispatch')
+                ->with(HWIOAuthEvents::CONNECT_CONFIRMED)
+            ;
+            $this->eventDispatcher->expects($this->at(1))
+                ->method('dispatch')
+                ->with(HWIOAuthEvents::CONNECT_COMPLETED)
+            ;
+        }
 
         $this->twig->expects($this->once())
             ->method('render')
@@ -193,7 +214,7 @@ class ConnectControllerConnectServiceActionTest extends AbstractConnectControlle
 
         $this->resourceOwner->expects($this->once())
             ->method('getAccessToken')
-            ->willReturn(array())
+            ->willReturn([])
         ;
 
         $this->tokenStorage->expects($this->once())
@@ -201,9 +222,7 @@ class ConnectControllerConnectServiceActionTest extends AbstractConnectControlle
             ->willReturn(new CustomOAuthToken())
         ;
 
-        $form = $this->getMockBuilder(FormInterface::class)
-            ->disableOriginalConstructor()
-            ->getMock();
+        $form = $this->createMock(FormInterface::class);
         $this->formFactory->expects($this->once())
             ->method('create')
             ->willReturn($form)
