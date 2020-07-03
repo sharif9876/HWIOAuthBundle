@@ -100,6 +100,7 @@
         "symfony/form":                   "^3.4|^4.3|^5.0",
         "symfony/yaml":                   "^3.4|^4.3|^5.0",
         "symfony/templating":             "^3.4|^4.3|^5.0",
+        "symfony/expression-language":    "^4.0",
 
         "psr/http-message":               "^1.0",
         "php-http/client-implementation": "^1.0",
