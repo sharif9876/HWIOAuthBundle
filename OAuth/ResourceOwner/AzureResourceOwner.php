@@ -3,7 +3,7 @@
 /*
  * This file is part of the HWIOAuthBundle package.
  *
- * (c) Hardware.Info <opensource@hardware.info>
+ * (c) Hardware Info <opensource@hardware.info>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -26,6 +26,8 @@ class AzureResourceOwner extends GenericOAuth2ResourceOwner
     protected $paths = [
         'identifier' => 'sub',
         'nickname' => 'unique_name',
+        'lastname' => 'family_name',
+        'firstname' => 'given_name',
         'realname' => ['given_name', 'family_name'],
         'email' => ['upn', 'email'],
         'profilepicture' => null,
@@ -38,22 +40,6 @@ class AzureResourceOwner extends GenericOAuth2ResourceOwner
     {
         $this->options['access_token_url'] = sprintf($this->options['access_token_url'], $this->options['application']);
         $this->options['authorization_url'] = sprintf($this->options['authorization_url'], $this->options['application']);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getAuthorizationUrl($redirectUri, array $extraParameters = [])
-    {
-        return parent::getAuthorizationUrl($redirectUri, $extraParameters + ['resource' => $this->options['resource']]);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function refreshAccessToken($refreshToken, array $extraParameters = [])
-    {
-        return parent::refreshAccessToken($refreshToken, $extraParameters + ['resource' => $this->options['resource']]);
     }
 
     /**
@@ -96,13 +82,10 @@ class AzureResourceOwner extends GenericOAuth2ResourceOwner
     {
         parent::configureOptions($resolver);
 
-        $resolver->setRequired(['resource']);
-
         $resolver->setDefaults([
             'infos_url' => 'https://graph.microsoft.com/v1.0/me',
-            'authorization_url' => 'https://login.windows.net/%s/oauth2/authorize',
-            'access_token_url' => 'https://login.windows.net/%s/oauth2/token',
-
+            'authorization_url' => 'https://login.microsoftonline.com/%s/oauth2/v2.0/authorize',
+            'access_token_url' => 'https://login.microsoftonline.com/%s/oauth2/v2.0/token',
             'application' => 'common',
             'api_version' => 'v1.0',
             'csrf' => true,

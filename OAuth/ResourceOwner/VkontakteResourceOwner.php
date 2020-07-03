@@ -3,7 +3,7 @@
 /*
  * This file is part of the HWIOAuthBundle package.
  *
- * (c) Hardware.Info <opensource@hardware.info>
+ * (c) Hardware Info <opensource@hardware.info>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -82,6 +82,7 @@ class VkontakteResourceOwner extends GenericOAuth2ResourceOwner
             'authorization_url' => 'https://oauth.vk.com/authorize',
             'access_token_url' => 'https://oauth.vk.com/access_token',
             'infos_url' => 'https://api.vk.com/method/users.get',
+            'use_authorization_to_get_token' => false,
 
             'api_version' => '5.73',
 

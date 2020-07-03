@@ -3,7 +3,7 @@
 /*
  * This file is part of the HWIOAuthBundle package.
  *
- * (c) Hardware.Info <opensource@hardware.info>
+ * (c) Hardware Info <opensource@hardware.info>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -17,10 +17,11 @@ use HWI\Bundle\OAuthBundle\OAuth\Response\UserResponseInterface;
 use HWI\Bundle\OAuthBundle\Security\Core\User\FOSUBUserProvider;
 use HWI\Bundle\OAuthBundle\Tests\Fixtures\FOSUser;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Security\Core\Exception\UsernameNotFoundException;
 
 class FOSUBUserProviderTest extends TestCase
 {
-    protected function setUp()
+    protected function setUp(): void
     {
         if (!interface_exists('FOS\UserBundle\Model\UserManagerInterface')) {
             $this->markTestSkipped('FOSUserBundle is not available.');
@@ -79,14 +80,34 @@ class FOSUBUserProviderTest extends TestCase
     public function testConnectUserWithNoSetterThrowsException()
     {
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Could not determine access type for property "googleId".');
+        $this->expectExceptionMessage('Could not determine access type for property "facebookId".');
 
         $user = new FOSUser();
 
-        $userResponseMock = $this->createUserResponseMock(null, 'google');
+        $userResponseMock = $this->createUserResponseMock(null, 'facebook');
         $provider = $this->createFOSUBUserProvider();
 
         $provider->connect($user, $userResponseMock);
+    }
+
+    public function testRefreshUserThrowsExceptionWhenUserIsNull()
+    {
+        $userManagerMock = $this->createMock(UserManagerInterface::class);
+        $userManagerMock->expects($this->once())
+            ->method('findUserBy')
+            ->willReturn(null);
+
+        $provider = new FOSUBUserProvider($userManagerMock, []);
+
+        try {
+            $provider->refreshUser(new FOSUser());
+
+            $this->fail('Failed asserting exception');
+        } catch (\RuntimeException $e) {
+            $this->assertInstanceOf(UsernameNotFoundException::class, $e);
+            $this->assertSame('User with ID "1" could not be reloaded.', $e->getMessage());
+            $this->assertSame('foo', $e->getUsername());
+        }
     }
 
     protected function createFOSUBUserProvider($user = null, $updateUser = null)
@@ -106,7 +127,7 @@ class FOSUBUserProviderTest extends TestCase
                 ->with($updateUser);
         }
 
-        return new FOSUBUserProvider($userManagerMock, ['github' => 'githubId', 'google' => 'googleId']);
+        return new FOSUBUserProvider($userManagerMock, ['github' => 'githubId', 'google' => 'googleId', 'facebook' => 'facebookId']);
     }
 
     protected function createResourceOwnerMock($resourceOwnerName = null)

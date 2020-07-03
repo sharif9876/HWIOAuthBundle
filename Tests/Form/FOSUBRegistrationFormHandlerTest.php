@@ -3,7 +3,7 @@
 /*
  * This file is part of the HWIOAuthBundle package.
  *
- * (c) Hardware.Info <opensource@hardware.info>
+ * (c) Hardware Info <opensource@hardware.info>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -22,6 +22,13 @@ use Symfony\Component\HttpFoundation\Request;
 
 class FOSUBRegistrationFormHandlerTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        if (!class_exists(\FOS\UserBundle\Model\User::class)) {
+            $this->markTestSkipped('FOSUserBundle not installed.');
+        }
+    }
+
     public function testProcessReturnsFalseForNotPostRequest()
     {
         $formMock = $this->getForm(false);

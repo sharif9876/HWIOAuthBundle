@@ -3,7 +3,7 @@
 /*
  * This file is part of the HWIOAuthBundle package.
  *
- * (c) Hardware.Info <opensource@hardware.info>
+ * (c) Hardware Info <opensource@hardware.info>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -18,7 +18,13 @@ class SensioConnectResourceOwnerTest extends GenericOAuth2ResourceOwnerTest
 {
     protected $resourceOwnerClass = SensioConnectResourceOwner::class;
 
-    protected function setUp()
+    protected $csrf = true;
+
+    protected $expectedUrls = [
+        'authorization_url' => 'http://user.auth/?test=2&response_type=code&client_id=clientid&state=random&redirect_uri=http%3A%2F%2Fredirect.to%2F',
+    ];
+
+    protected function setUp(): void
     {
         parent::setUp();
 

@@ -3,7 +3,7 @@
 /*
  * This file is part of the HWIOAuthBundle package.
  *
- * (c) Hardware.Info <opensource@hardware.info>
+ * (c) Hardware Info <opensource@hardware.info>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -21,6 +21,8 @@ use HWI\Bundle\OAuthBundle\Security\Http\ResourceOwnerMap;
 use HWI\Bundle\OAuthBundle\Tests\Fixtures\OAuthAwareException;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
+use Symfony\Component\Security\Core\Role\Role;
 use Symfony\Component\Security\Core\User\UserCheckerInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
@@ -112,9 +114,9 @@ class OAuthProviderTest extends TestCase
         $this->assertEquals($userMock, $token->getUser());
         $this->assertEquals('github', $token->getResourceOwnerName());
 
-        $roles = $token->getRoles();
+        $roles = $this->getRoleNames($token);
         $this->assertCount(1, $roles);
-        $this->assertEquals('ROLE_TEST', $roles[0]->getRole());
+        $this->assertEquals('ROLE_TEST', $roles[0]);
     }
 
     public function testOAuthAwareExceptionGetsInfo()
@@ -270,9 +272,9 @@ class OAuthProviderTest extends TestCase
         $this->assertEquals($userMock, $token->getUser());
         $this->assertEquals('github', $token->getResourceOwnerName());
 
-        $roles = $token->getRoles();
+        $roles = $this->getRoleNames($token);
         $this->assertCount(1, $roles);
-        $this->assertEquals('ROLE_TEST', $roles[0]->getRole());
+        $this->assertEquals('ROLE_TEST', $roles[0]);
     }
 
     protected function getOAuthAwareUserProviderMock()
@@ -313,5 +315,25 @@ class OAuthProviderTest extends TestCase
     protected function getTokenStorageMock()
     {
         return $this->createMock(TokenStorageInterface::class);
+    }
+
+    /**
+     * Symfony < 4.3 BC layer.
+     *
+     * @param TokenInterface $token
+     *
+     * @return array
+     */
+    private function getRoleNames(TokenInterface $token)
+    {
+        if (method_exists($token, 'getRoleNames')) {
+            $roles = $token->getRoleNames();
+        } else {
+            $roles = array_map(function (Role $role) {
+                return $role->getRole();
+            }, $token->getRoles());
+        }
+
+        return $roles;
     }
 }

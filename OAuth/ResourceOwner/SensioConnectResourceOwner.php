@@ -3,7 +3,7 @@
 /*
  * This file is part of the HWIOAuthBundle package.
  *
- * (c) Hardware.Info <opensource@hardware.info>
+ * (c) Hardware Info <opensource@hardware.info>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -21,14 +21,6 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  */
 class SensioConnectResourceOwner extends GenericOAuth2ResourceOwner
 {
-    /**
-     * {@inheritdoc}
-     */
-    protected function doGetTokenRequest($url, array $parameters = [])
-    {
-        return $this->httpRequest($this->options['access_token_url'], $parameters, [], 'POST');
-    }
-
     /**
      * {@inheritdoc}
      */
@@ -54,6 +46,7 @@ class SensioConnectResourceOwner extends GenericOAuth2ResourceOwner
             'response_type' => 'code',
 
             'use_bearer_authorization' => false,
+            'csrf' => true,
         ]);
     }
 }

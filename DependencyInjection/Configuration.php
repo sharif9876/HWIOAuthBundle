@@ -3,7 +3,7 @@
 /*
  * This file is part of the HWIOAuthBundle package.
  *
- * (c) Hardware.Info <opensource@hardware.info>
+ * (c) Hardware Info <opensource@hardware.info>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -56,6 +56,7 @@ final class Configuration implements ConfigurationInterface
             'hubic',
             'instagram',
             'jawbone',
+            'keycloak',
             'linkedin',
             'mailru',
             'odnoklassniki',
@@ -164,6 +165,10 @@ final class Configuration implements ConfigurationInterface
                     ->prototype('scalar')->end()
                 ->end()
                 ->scalarNode('target_path_parameter')->defaultNull()->end()
+                ->arrayNode('target_path_domains_whitelist')
+                    ->defaultValue([])
+                    ->prototype('scalar')->end()
+                ->end()
                 ->booleanNode('use_referer')->defaultFalse()->end()
                 ->booleanNode('failed_use_referer')->defaultFalse()->end()
                 ->scalarNode('failed_auth_path')->defaultValue('hwi_oauth_connect')->end()

@@ -3,7 +3,7 @@
 /*
  * This file is part of the HWIOAuthBundle package.
  *
- * (c) Hardware.Info <opensource@hardware.info>
+ * (c) Hardware Info <opensource@hardware.info>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -19,13 +19,29 @@ use HWI\Bundle\OAuthBundle\OAuth\Response\UserResponseInterface;
 use HWI\Bundle\OAuthBundle\Security\Core\User\EntityUserProvider;
 use HWI\Bundle\OAuthBundle\Tests\Fixtures\User;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Security\Core\Exception\UsernameNotFoundException;
 
 class EntityUserProviderTest extends TestCase
 {
-    protected function setUp()
+    protected function setUp(): void
     {
         if (!class_exists('Doctrine\ORM\EntityManager')) {
             $this->markTestSkipped('The Doctrine ORM is not available');
+        }
+    }
+
+    public function testLoadUserByUsernameThrowsExceptionWhenUserIsNull()
+    {
+        $provider = $this->createEntityUserProvider();
+
+        try {
+            $provider->loadUserByUsername('asm89');
+
+            $this->fail('Failed asserting exception');
+        } catch (\RuntimeException $e) {
+            $this->assertInstanceOf(UsernameNotFoundException::class, $e);
+            $this->assertSame("User 'asm89' not found.", $e->getMessage());
+            $this->assertSame('asm89', $e->getUsername());
         }
     }
 
@@ -40,14 +56,19 @@ class EntityUserProviderTest extends TestCase
 
     public function testLoadUserByOAuthUserResponseThrowsExceptionWhenUserIsNull()
     {
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('User \'asm89\' not found.');
-
         $userResponseMock = $this->createUserResponseMock('asm89', 'github');
 
         $provider = $this->createEntityUserProvider();
 
-        $provider->loadUserByOAuthUserResponse($userResponseMock);
+        try {
+            $provider->loadUserByOAuthUserResponse($userResponseMock);
+
+            $this->fail('Failed asserting exception');
+        } catch (\RuntimeException $e) {
+            $this->assertInstanceOf(UsernameNotFoundException::class, $e);
+            $this->assertSame("User 'asm89' not found.", $e->getMessage());
+            $this->assertSame('asm89', $e->getUsername());
+        }
     }
 
     public function testLoadUserByOAuthUserResponse()
@@ -60,6 +81,22 @@ class EntityUserProviderTest extends TestCase
         $loadedUser = $provider->loadUserByOAuthUserResponse($userResponseMock);
 
         $this->assertEquals($user, $loadedUser);
+    }
+
+    public function testRefreshUserThrowsExceptionWhenUserIsNull()
+    {
+        $provider = $this->createEntityUserProvider();
+        $user = new User();
+
+        try {
+            $provider->refreshUser($user);
+
+            $this->fail('Failed asserting exception');
+        } catch (\RuntimeException $e) {
+            $this->assertInstanceOf(UsernameNotFoundException::class, $e);
+            $this->assertSame('User with ID "1" could not be reloaded.', $e->getMessage());
+            $this->assertSame('foo', $e->getUsername());
+        }
     }
 
     public function createManagerRegistryMock($user = null)

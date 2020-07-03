@@ -3,7 +3,7 @@
 /*
  * This file is part of the HWIOAuthBundle package.
  *
- * (c) Hardware.Info <opensource@hardware.info>
+ * (c) Hardware Info <opensource@hardware.info>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -25,37 +25,12 @@ class Auth0ResourceOwner extends GenericOAuth2ResourceOwner
      * {@inheritdoc}
      */
     protected $paths = [
-        'identifier' => 'user_id',
+        'identifier' => 'sub',
         'nickname' => 'nickname',
         'realname' => 'name',
         'email' => 'email',
         'profilepicture' => 'picture',
     ];
-
-    /**
-     * {@inheritdoc}
-     */
-    protected function doGetTokenRequest($url, array $parameters = [])
-    {
-        return $this->httpRequest(
-            $url,
-            http_build_query($parameters, '', '&'),
-            $this->getRequestHeaders(),
-            'POST'
-        );
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    protected function doGetUserInformationRequest($url, array $parameters = [])
-    {
-        return $this->httpRequest(
-            $url,
-            http_build_query($parameters, '', '&'),
-            $this->getRequestHeaders()
-        );
-    }
 
     /**
      * {@inheritdoc}
@@ -94,16 +69,14 @@ class Auth0ResourceOwner extends GenericOAuth2ResourceOwner
     }
 
     /**
-     * @param array $headers
-     *
-     * @return array
+     * {@inheritdoc}
      */
-    private function getRequestHeaders(array $headers = [])
+    protected function httpRequest($url, $content = null, array $headers = [], $method = null)
     {
         if (isset($this->options['auth0_client'])) {
             $headers['Auth0-Client'] = $this->options['auth0_client'];
         }
 
-        return $headers;
+        return parent::httpRequest($url, $content, $headers, $method);
     }
 }

@@ -3,7 +3,7 @@
 /*
  * This file is part of the HWIOAuthBundle package.
  *
- * (c) Hardware.Info <opensource@hardware.info>
+ * (c) Hardware Info <opensource@hardware.info>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -16,10 +16,11 @@ use HWI\Bundle\OAuthBundle\Controller\ConnectController;
 use HWI\Bundle\OAuthBundle\OAuth\ResourceOwnerInterface;
 use HWI\Bundle\OAuthBundle\Security\Core\Exception\AccountNotLinkedException;
 use HWI\Bundle\OAuthBundle\Security\Http\ResourceOwnerMap;
+use HWI\Bundle\OAuthBundle\Security\Http\ResourceOwnerMapLocator;
 use HWI\Bundle\OAuthBundle\Security\OAuthUtils;
 use HWI\Bundle\OAuthBundle\Tests\Fixtures\CustomOAuthToken;
 use HWI\Bundle\OAuthBundle\Tests\Fixtures\CustomUserResponse;
-use Symfony\Bundle\FrameworkBundle\Tests\TestCase;
+use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\Container;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -29,7 +30,6 @@ use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
-use Symfony\Component\Security\Core\Security;
 use Symfony\Component\Security\Core\User\UserCheckerInterface;
 use Symfony\Component\Templating\EngineInterface;
 
@@ -81,6 +81,11 @@ abstract class AbstractConnectControllerTest extends TestCase
     protected $oAuthUtils;
 
     /**
+     * @var \PHPUnit_Framework_MockObject_MockObject|ResourceOwnerMapLocator
+     */
+    protected $resourceOwnerMapLocator;
+
+    /**
      * @var \PHPUnit_Framework_MockObject_MockObject|UserCheckerInterface
      */
     protected $userChecker;
@@ -110,7 +115,7 @@ abstract class AbstractConnectControllerTest extends TestCase
      */
     protected $container;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -127,6 +132,10 @@ abstract class AbstractConnectControllerTest extends TestCase
         $this->container->set('security.token_storage', $this->tokenStorage);
 
         $this->twig = $this->createMock(EngineInterface::class);
+        $this->twig->expects($this->any())
+            ->method('render')
+            ->willReturn('')
+        ;
         $this->container->set('twig', $this->twig);
 
         $this->router = $this->createMock(RouterInterface::class);
@@ -148,7 +157,9 @@ abstract class AbstractConnectControllerTest extends TestCase
         $this->container->set('hwi_oauth.account.connector', $this->accountConnector);
 
         $this->oAuthUtils = $this->createMock(OAuthUtils::class);
-        $this->container->set('hwi_oauth.security.oauth_utils', $this->oAuthUtils);
+
+        $this->resourceOwnerMapLocator = new ResourceOwnerMapLocator();
+        $this->resourceOwnerMapLocator->add('default', $this->resourceOwnerMap);
 
         $this->userChecker = $this->createMock(UserCheckerInterface::class);
         $this->container->set('hwi_oauth.user_checker', $this->userChecker);
@@ -163,7 +174,7 @@ abstract class AbstractConnectControllerTest extends TestCase
         $this->request = Request::create('/');
         $this->request->setSession($this->session);
 
-        $this->controller = new ConnectController();
+        $this->controller = new ConnectController($this->oAuthUtils, $this->resourceOwnerMapLocator);
         $this->controller->setContainer($this->container);
     }
 
@@ -177,14 +188,6 @@ abstract class AbstractConnectControllerTest extends TestCase
         $accountNotLinked->setToken(new CustomOAuthToken());
 
         return $accountNotLinked;
-    }
-
-    /**
-     * @return string
-     */
-    protected function getAuthenticationErrorKey()
-    {
-        return Security::AUTHENTICATION_ERROR;
     }
 
     protected function mockAuthorizationCheck($granted = true)

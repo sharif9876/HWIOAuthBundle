@@ -3,7 +3,7 @@
 /*
  * This file is part of the HWIOAuthBundle package.
  *
- * (c) Hardware.Info <opensource@hardware.info>
+ * (c) Hardware Info <opensource@hardware.info>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -22,7 +22,7 @@ class OAuthTokenTest extends TestCase
      */
     private $token;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->token = new OAuthToken('access_token', ['ROLE_TEST']);
         $this->token->setResourceOwnerName('github');
@@ -106,9 +106,21 @@ class OAuthTokenTest extends TestCase
 
     public function testSerializeTokenInException()
     {
-        $exception = new AccountNotLinkedException($this->token);
-        $str = serialize($exception);
+        $resourceOwnerName = 'github';
 
-        $this->assertEquals($exception, unserialize($str));
+        $exception = new AccountNotLinkedException();
+        $exception->setToken($this->token);
+        $exception->setResourceOwnerName($resourceOwnerName);
+
+        // Symfony < 4.3 BC layer.
+        if (method_exists($exception, '__serialize')) {
+            $processed = new AccountNotLinkedException();
+            $processed->__unserialize($exception->__serialize());
+        } else {
+            $processed = unserialize(serialize($exception));
+        }
+
+        $this->assertEquals($this->token, $processed->getToken());
+        $this->assertEquals($resourceOwnerName, $processed->getResourceOwnerName());
     }
 }

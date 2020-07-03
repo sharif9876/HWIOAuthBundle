@@ -3,7 +3,7 @@
 /*
  * This file is part of the HWIOAuthBundle package.
  *
- * (c) Hardware.Info <opensource@hardware.info>
+ * (c) Hardware Info <opensource@hardware.info>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -136,8 +136,13 @@ class FOSUBUserProvider implements UserProviderInterface, AccountConnectorInterf
         }
 
         $userId = $this->accessor->getValue($user, $identifier);
+        $username = $user->getUsername();
+
         if (null === $user = $this->userManager->findUserBy([$identifier => $userId])) {
-            throw new UsernameNotFoundException(sprintf('User with ID "%d" could not be reloaded.', $userId));
+            $exception = new UsernameNotFoundException(sprintf('User with ID "%d" could not be reloaded.', $userId));
+            $exception->setUsername($username);
+
+            throw $exception;
         }
 
         return $user;

@@ -3,7 +3,7 @@
 /*
  * This file is part of the HWIOAuthBundle package.
  *
- * (c) Hardware.Info <opensource@hardware.info>
+ * (c) Hardware Info <opensource@hardware.info>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -15,7 +15,6 @@ use Http\Client\Exception\TransferException;
 use HWI\Bundle\OAuthBundle\OAuth\Exception\HttpTransportException;
 use HWI\Bundle\OAuthBundle\OAuth\ResourceOwner\AzureResourceOwner;
 use HWI\Bundle\OAuthBundle\Tests\Fixtures\CustomUserResponse;
-use Symfony\Component\Security\Http\HttpUtils;
 
 class AzureResourceOwnerTest extends GenericOAuth2ResourceOwnerTest
 {
@@ -41,13 +40,13 @@ json;
     ];
 
     protected $expectedUrls = [
-        'authorization_url_csrf' => 'http://user.auth/?test=2&response_type=code&client_id=clientid&state=random&redirect_uri=http%3A%2F%2Fredirect.to%2F&resource=https%3A%2F%2Fgraph.windows.net',
+        'authorization_url_csrf' => 'http://user.auth/?test=2&response_type=code&client_id=clientid&state=random&redirect_uri=http%3A%2F%2Fredirect.to%2F',
     ];
 
     public function testGetAuthorizationUrl()
     {
         $this->assertEquals(
-            $this->options['authorization_url'].'&response_type=code&client_id=clientid&state=random&redirect_uri=http%3A%2F%2Fredirect.to%2F&resource=https%3A%2F%2Fgraph.windows.net',
+            $this->options['authorization_url'].'&response_type=code&client_id=clientid&state=random&redirect_uri=http%3A%2F%2Fredirect.to%2F',
             $this->resourceOwner->getAuthorizationUrl('http://redirect.to/')
         );
     }
@@ -65,6 +64,8 @@ json;
 
         $this->assertEquals('1', $userResponse->getUsername());
         $this->assertEquals('Dummy Tester', $userResponse->getRealName());
+        $this->assertEquals('Dummy', $userResponse->getFirstName());
+        $this->assertEquals('Tester', $userResponse->getLastName());
         $this->assertEquals('dummy123', $userResponse->getNickname());
         $this->assertNull($userResponse->getRefreshToken());
         $this->assertNull($userResponse->getExpiresIn());
@@ -88,6 +89,8 @@ json;
         $this->assertInstanceOf($class, $userResponse);
         $this->assertEquals('foo666', $userResponse->getUsername());
         $this->assertEquals('foo', $userResponse->getNickname());
+        $this->assertEquals('foo', $userResponse->getFirstName());
+        $this->assertEquals('BAR', $userResponse->getLastName());
         $this->assertEquals('token', $userResponse->getAccessToken());
         $this->assertNull($userResponse->getRefreshToken());
         $this->assertNull($userResponse->getExpiresIn());
@@ -109,19 +112,5 @@ json;
         } catch (HttpTransportException $e) {
             $this->assertSame($exception, $e->getPrevious());
         }
-    }
-
-    protected function setUpResourceOwner($name, HttpUtils $httpUtils, array $options)
-    {
-        return parent::setUpResourceOwner(
-            $name,
-            $httpUtils,
-            array_merge(
-                [
-                    'resource' => 'https://graph.windows.net',
-                ],
-                $options
-            )
-        );
     }
 }
